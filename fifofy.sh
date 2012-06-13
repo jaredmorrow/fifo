@@ -257,6 +257,7 @@ read_component() {
 	    rm -rf /tmp/fifo
 	    cd
 	    mv /tmp/fifo-debug.tar.bz2 .
+	    ;;
 	*)
 	    echo "Component '$COMPONENT' not supported."
 	    echo "Please choose one of: wiggle, sniffle, snarl, redis, chunter, zone or type exit."
