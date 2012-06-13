@@ -246,6 +246,17 @@ read_component() {
 	    ;;
 	clean)
 	    clean;;
+	collect)
+	    mkdir -p /tmp/fifo
+	    cd /tmp/fifo
+	    cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/* .
+	    ps -afe | grep erl > ps.log
+	    cd -
+	    cd /tmp
+	    tar jcvf fifo-debug.tar.bz2 fifo
+	    rm -rf /tmp/fifo
+	    cd
+	    mv /tmp/fifo-debug.tar.bz2 .
 	*)
 	    echo "Component '$COMPONENT' not supported."
 	    echo "Please choose one of: wiggle, sniffle, snarl, redis, chunter, zone or type exit."
@@ -279,6 +290,7 @@ $0 redis <hypervisor ip>               - sets up redis in the current zone.
 $0 snarl <hypervisor ip>               - sets up snarl in the current zone.
 $0 sniffle <hypervisor ip>             - sets up sniffle in the current zone.
 $0 wiggle <hypervisor ip>              - sets up sniffle in the current zone.
+$0 collect                             - collects fifo debug data.
 EOF
 else
     read_component $0
