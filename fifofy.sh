@@ -136,7 +136,7 @@ install_zone() {
     echo "[ZONE] Starting Zone installation."
     echo "[ZONE] Updating datasets."
     dsadm update >> /var/log/fifo-install.log
-    echo "[ZONE] Inporting dataset."
+    echo "[ZONE] Importing dataset."
     dsadm import $DATASET >> /var/log/fifo-install.log
     echo "[ZONE] Creating VM."
     vmadm create >> /var/log/fifo-install.log<<EOF
