@@ -247,15 +247,15 @@ read_component() {
 	clean)
 	    clean;;
 	collect)
-	    mkdir -p /tmp/fifo
-	    cd /tmp/fifo
-	    cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/* .
-	    ps -afe | grep erl > ps.log
-	    cd -
-	    cd /tmp
-	    tar jcvf fifo-debug.tar.bz2 fifo
-	    rm -rf /tmp/fifo
-	    cd
+	    (
+		mkdir -p /tmp/fifo
+		cd /tmp/fifo
+		cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/fifo/* .
+		ps -afe | grep [r]un_erl > ps.log
+		cd /tmp
+		gtar cjvf fifo-debug.tar.bz2 fifo
+		rm -rf /tmp/fifo
+	    )
 	    mv /tmp/fifo-debug.tar.bz2 .
 	    ;;
 	*)
