@@ -6,7 +6,8 @@ COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
 clean() {
-    vmadm delete fifo
+    UUID=`vmadm list -p -o uuid zonename=fifo`
+    vmadm delete $UUID
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
 }
