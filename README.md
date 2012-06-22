@@ -21,3 +21,11 @@ _REDIS_URL_ - the url of the redis server
 _REDIS_DOMAIN_ - the domain of the redis server
 _FIFOCOOKIE_ - cookie for this fifo instance.
 ```
+
+Reporting a bug
+===============
+if you report a bug please be so kind and provide the output from
+```
+./fifofy.sh collect
+```
+ran on the global zone, this will making it way easyer to track down the curlpit.
