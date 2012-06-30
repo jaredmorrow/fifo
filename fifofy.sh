@@ -5,7 +5,7 @@ REDIS_DOMAIN="fifo"
 COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
-clean() {
+uninstall() {
     UUID=`vmadm list -p -o uuid zonename=fifo`
     vmadm delete $UUID
     /opt/chunter/bin/chunter stop
@@ -263,8 +263,8 @@ read_component() {
 	    ;;
 	exit)
 	    ;;
-	clean)
-	    clean;;
+	uninstall)
+	    uninstall;;
 	collect)
 	    (
 		mkdir -p /tmp/fifo
@@ -310,6 +310,7 @@ $0 redis <hypervisor ip>               - sets up redis in the current zone.
 $0 snarl <hypervisor ip>               - sets up snarl in the current zone.
 $0 sniffle <hypervisor ip>             - sets up sniffle in the current zone.
 $0 wiggle <hypervisor ip>              - sets up sniffle in the current zone.
+$0 uninstall                           - removes the installation.
 $0 collect                             - collects fifo debug data.
 EOF
 else
