@@ -134,11 +134,29 @@ install_redis() {
 }
 
 install_zone() {
+    IMGADM=dsadm
+    if [ -f /usr/sbin/imgadm ] 
+    then
+	IMGADM=imgadm
+	if [ -d /var/db/imgadm ]
+	then
+	    # This SmartOS suffers from the migration problem
+	    # The solution was provided by Nahum Shalman
+	    # look at the original here: http://wiki.smartos.org/display/DOC/Migrating+from+an+earlier+release+to+the+20120614+Release
+	    PWD=`pwd`
+	    mkdir -p /var/db/imgadm
+	    cp /var/db/dsadm/* /var/db/imgadm/
+	    cd /var/db/imgadm
+	    mv dscache.json imgcache.json
+	    for manifest in *.dsmanifest; do mv $manifest ${manifest/dsmanifest/json}; done;
+	    cd $PWD
+	fi
+    fi
     echo "[ZONE] Starting Zone installation."
     echo "[ZONE] Updating datasets."
-    dsadm update >> /var/log/fifo-install.log
+    $IMGADM update >> /var/log/fifo-install.log
     echo "[ZONE] Importing dataset."
-    dsadm import $DATASET >> /var/log/fifo-install.log
+    $IMGADM import $DATASET >> /var/log/fifo-install.log
     echo "[ZONE] Creating VM."
     vmadm create >> /var/log/fifo-install.log<<EOF
 {
