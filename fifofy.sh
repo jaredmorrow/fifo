@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-BASE_PATH="http://release.project-fifo.net"
-RELEASE="dev"
+BASE_PATH="__BASE_URL__"
+RELEASE="__REL__"
 REDIS_DOMAIN="fifo"
 COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
