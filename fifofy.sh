@@ -138,7 +138,7 @@ install_zone() {
     if [ -f /usr/sbin/imgadm ] 
     then
 	IMGADM=imgadm
-	if [ -d /var/db/imgadm ]
+	if [ ! -d /var/db/imgadm ]
 	then
 	    # This SmartOS suffers from the migration problem
 	    # The solution was provided by Nahum Shalman
