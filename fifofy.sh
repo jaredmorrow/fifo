@@ -5,6 +5,11 @@ REDIS_DOMAIN="fifo"
 COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
+error() {
+  echo "[ERROR] $1." >> /var/log/fifo/fifo-install.log
+  echo "[ERROR] $1."
+  echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
+}
 uninstall() {
     UUID=`vmadm list -p -o uuid zonename=fifo`
     vmadm delete $UUID
@@ -123,6 +128,7 @@ install_redis() {
 	echo "$COMPONENT can not be installed in the global zone!"
 	#	exit 1
     fi
+    /opt/local/bin/pkgin update >> /var/log/fifo-install.log
     /opt/local/bin/pkgin -y install redis >> /var/log/fifo-install.log
     echo "[REDIS] Fixing SVM."
     curl -sO  $BASE_PATH/$RELEASE/redis.xml >> /var/log/fifo-install.log
@@ -188,12 +194,31 @@ EOF
     done
     sleep 30
     zlogin fifo $0 redis $ZONE_IP
-    echo "[ZONE] Prefetcing services."
+    echo "[ZONE] Prefetching services."
     mkdir -p /zones/fifo/root/fifo
+    PWD=`pwd`
     cd /zones/fifo/root/fifo
-    curl -sO $BASE_PATH/$RELEASE/snarl.tar.bz2 >> /var/log/fifo-install.log
-    curl -sO $BASE_PATH/$RELEASE/sniffle.tar.bz2 >> /var/log/fifo-install.log
-    curl -sO $BASE_PATH/$RELEASE/wiggle.tar.bz2 >> /var/log/fifo-install.log
+    if [ -f $PWD/snarl.tar.bz2 ]
+    then
+	cp $PWD/snarl.tar.bz2 .
+    else
+	curl -sO $BASE_PATH/$RELEASE/snarl.tar.bz2 >> /var/log/fifo-install.log
+    fi
+
+    if [ ! -f $PWD/sniffle.tar.bz2 ]
+    then
+	cp $PWD/sniffle.tar.bz2 .
+    else
+	curl -sO $BASE_PATH/$RELEASE/sniffle.tar.bz2 >> /var/log/fifo-install.log
+    fi
+
+    if [ -f $PWD/wiggle.tar.bz2 ]
+    then
+	cp $PWD/sniffle.tar.bz2 .
+
+    else
+	curl -sO $BASE_PATH/$RELEASE/wiggle.tar.bz2 >> /var/log/fifo-install.log
+    fi
     cd -
     zlogin fifo $0 snarl $ZONE_IP
     zlogin fifo $0 sniffle $ZONE_IP
