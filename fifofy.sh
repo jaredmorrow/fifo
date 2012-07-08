@@ -82,8 +82,8 @@ install_chunter() {
     echo "[COMPONENT: $COMPONENT] Adding Service."
     mkdir -p /opt/custom/smf/
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
-    cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/$COMPONENT.xml >> /var/log/fifo-install.log
+    cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/epmd.xml >> /var/log/fifo-install.log
     cd -
     echo "[COMPONENT: $COMPONENT] Done."
@@ -119,6 +119,7 @@ install_service() {
     subs 
     echo "[COMPONENT: $COMPONENT] Adding Service."
     svccfg import /fifo/$COMPONENT/$COMPONENT.xml >> /var/log/fifo-install.log
+    svccfg import /fifo/$COMPONENT/epmd.xml >> /var/log/fifo-install.log
     echo "[COMPONENT: $COMPONENT] Done."
     cd -
 }
