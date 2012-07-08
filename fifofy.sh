@@ -11,28 +11,24 @@ error() {
   echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
 }
 
-statd() {
-    pkgin install nodejs
-    npm install statsd
-
-}
-
 graphit() {
-    pkgin install py27-memcached memcached py27-ZopeInterface zope3    
-    pkgin install cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi
-    pkgin install py27-sqlite2 sqlite py27-twisted 
-    pkgin install gcc-compiler gmake pkg-config xproto renderproto kbproto
-    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
-    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
-    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
-    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
-    curl -LkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
-    curl -LkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
+    cd /tmp
+    /opt/local/bin/pkgin update
+    /opt/local/bin/pkgin -y install nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto python27
+    npm install statsd
+    
+#    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
+
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
+    curl -sLkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
+    curl -sLkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
     tar zxf whisper-0.9.10.tar.gz 
-    tar jxf py2cairo-1.10.0.tar.bz2 
     cd whisper-0.9.10
     python2.7 setup.py install
     cd ..
+    tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
     CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf configure --prefix=/opt/local
     CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf build
@@ -53,6 +49,12 @@ graphit() {
     cd /opt/graphite/conf
     cp carbon.conf.example carbon.conf
     cp storage-schemas.conf.example storage-schemas.conf
+    cat <<EOF >>storage-schemas.conf
+[stats]
+priority = 110
+pattern = ^stats\..*
+retentions = 1:1h,10:2160,60:10080,600:262974
+EOF
     cd -
     cd /opt/graphite/webapp/graphite
     cp local_settings.py.example local_settings.py
@@ -61,11 +63,19 @@ graphit() {
     echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db
     cd -
     chown www:www -R /opt/graphite/
-    mkdir -p /opt/graphite/storage/log/carbon-cache
     sed -i /opt/local/etc/httpd/httpd.conf -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/'
     echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
     echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
-
+    cd /fifo
+    curl -sO $BASE_PATH/$RELEASE/statsdconfig.js
+    curl -sO $BASE_PATH/$RELEASE/statsd.xml
+    curl -sO $BASE_PATH/$RELEASE/carbon.xml
+    curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf
+    cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
+    svcadm enable apache
+    svccfg import statsd.xml
+    svccfg import carbon.xml
+    cd -
 }
 
 uninstall() {
@@ -284,9 +294,11 @@ EOF
 	curl -sO $BASE_PATH/$RELEASE/wiggle.tar.bz2 >> /var/log/fifo-install.log
     fi
     cd -
+    zlogin fifo $0 graphit
     zlogin fifo $0 snarl $ZONE_IP
     zlogin fifo $0 sniffle $ZONE_IP
     zlogin fifo $0 wiggle $ZONE_IP
+
 }
 read_component() {
     if [ "x${COMPONENT}x" == "xx" ] 
@@ -336,6 +348,9 @@ read_component() {
 	    STATSD_IP=$IP
 	    install_chunter
 	    ;;
+	graphit)
+	    echo "installing graphite."
+	    graphit
 	zone)
 	    echo "Please enter the IP for your zone."
 	    read_ip
