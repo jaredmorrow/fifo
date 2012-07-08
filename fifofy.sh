@@ -10,9 +10,69 @@ error() {
   echo "[ERROR] $1."
   echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
 }
+
+statd() {
+    pkgin install nodejs
+    npm install statsd
+
+}
+
+graphit() {
+    pkgin install py27-memcached memcached py27-ZopeInterface zope3    
+    pkgin install cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi
+    pkgin install py27-sqlite2 sqlite py27-twisted 
+    pkgin install gcc-compiler gmake pkg-config xproto renderproto kbproto
+    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
+    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
+    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
+    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
+    curl -LkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
+    curl -LkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
+    tar zxf whisper-0.9.10.tar.gz 
+    tar jxf py2cairo-1.10.0.tar.bz2 
+    cd whisper-0.9.10
+    python2.7 setup.py install
+    cd ..
+    cd py2cairo-1.10.0
+    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf configure --prefix=/opt/local
+    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf build
+    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf install
+    cd ..
+    tar zxf django-tagging-0.3.1.tar.gz
+    cd django-tagging-0.3.1
+    python2.7 setup.py install
+    cd ..
+    tar zxf graphite-web-0.9.10.tar.gz
+    cd graphite-web-0.9.10
+    python2.7 setup.py install
+    cd ..
+    tar zxf carbon-0.9.10.tar.gz
+    cd carbon-0.9.10
+    python2.7 setup.py install
+    cd ..
+    cd /opt/graphite/conf
+    cp carbon.conf.example carbon.conf
+    cp storage-schemas.conf.example storage-schemas.conf
+    cd -
+    cd /opt/graphite/webapp/graphite
+    cp local_settings.py.example local_settings.py
+    python2.7 manage.py syncdb --noinput
+    python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput
+    echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db
+    cd -
+    chown www:www -R /opt/graphite/
+    mkdir -p /opt/graphite/storage/log/carbon-cache
+    sed -i /opt/local/etc/httpd/httpd.conf -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/'
+    echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
+    echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
+
+}
+
 uninstall() {
     UUID=`vmadm list -p -o uuid zonename=fifo`
     vmadm delete $UUID
+    svcadm disable chunter
+    svcadm disable epmd
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
 }
@@ -55,6 +115,7 @@ subs() {
     echo "[SUBS $FILE] replacing placeholders."
     sed -e "s;_OWN_IP_;$OWN_IP;" -i bak $FILE
     sed -e "s;_FIFOCOOKIE_;$COOKIE;" -i bak $FILE
+    sed -e "s;_STATSD_IP_;$STATSD_IP;" -i bak $FILE
     sed -e "s;_REDIS_URL_;redis://$REDIS_IP;" -i bak $FILE
     sed -e "s;_REDIS_DOMAIN_;$REDIS_DOMAIN;" -i bak $FILE
 }
@@ -239,6 +300,7 @@ read_component() {
 	    read_ip
 	    OWN_IP=$IP
 	    REDIS_IP=$IP	    
+	    STATSD_IP=$IP
 	    install_service
 	    ;;
 	redis)
@@ -261,7 +323,7 @@ read_component() {
 	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
 	    install_zone
-	    REDIS_IP=$ZONE_IP
+	    STATSD_IP=$ZONE_IP
 	    COMPONENT=chunter
 	    install_chunter 
 	    ;;
@@ -269,6 +331,9 @@ read_component() {
 	    echo "Please enter the IP for your hypervisor."
 	    read_ip
 	    OWN_IP=$IP
+	    echo "Please enter the IP for your statsd server."
+	    read_ip
+	    STATSD_IP=$IP
 	    install_chunter
 	    ;;
 	zone)
