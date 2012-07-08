@@ -15,45 +15,47 @@ graphit() {
     echo "[GRAPHIT] Starting installation"
     cd /tmp
     echo "[GRAPHIT] Updating packages"
-    /opt/local/bin/pkgin update
-    echo "[GRAPHIT] Installing required packages"
-    /opt/local/bin/pkgin -y install nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto python27
+    /opt/local/bin/pkgin update >> /var/log/fifo-install.log
+    echo "[GRAPHIT] Installing required packages (this will take a while!)"
+    /opt/local/bin/pkgin -y install python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted  >> /var/log/fifo-install.log
+    echo "[GRAPHIT] Installing required packages 2nd part (this will take a while!)"
+    /opt/local/bin/pkgin -y install gcc-compiler gmake pkg-config xproto renderproto kbproto  >> /var/log/fifo-install.log
     echo "[GRAPHIT] Installing statsd"
-    npm install statsd
+    /opt/local/bin/npm install statsd >> /var/log/fifo-install.log
     
 #    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
     echo "[GRAPHIT] Downloadin additional packages"
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
-    curl -sLkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
-    curl -sLkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz >> /var/log/fifo-install.log
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz >> /var/log/fifo-install.log
+    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz >> /var/log/fifo-install.log
+    curl -sLkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2 >> /var/log/fifo-install.log
+    curl -sLkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz >> /var/log/fifo-install.log
     echo "[GRAPHIT] Installing: whisper"
-    tar zxf whisper-0.9.10.tar.gz 
+    tar zxf whisper-0.9.10.tar.gz
     cd whisper-0.9.10
-    python2.7 setup.py install
+    /opt/local/bin/python2.7 setup.py install >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Installing: py2cairo"
     tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
-    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf configure --prefix=/opt/local
-    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf build
-    CFLAGS=-m64 LDFLAGS=-m64 python2.7 waf install
+    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log
+    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log
+    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Installing: django-tagging"
     tar zxf django-tagging-0.3.1.tar.gz
     cd django-tagging-0.3.1
-    python2.7 setup.py install
+    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Installing: graphite-web"
     tar zxf graphite-web-0.9.10.tar.gz
     cd graphite-web-0.9.10
-    python2.7 setup.py install
+    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Installing: carbon"
     tar zxf carbon-0.9.10.tar.gz
     cd carbon-0.9.10
-    python2.7 setup.py install
+    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Configuring: carbon"
     cd /opt/graphite/conf
@@ -73,11 +75,11 @@ EOF
     sed -i /opt/local/etc/httpd/httpd.conf -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/'
     echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
     echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
-    curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf
+    curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf 
     echo "[GRAPHIT] Configuring: database"
-    python2.7 manage.py syncdb --noinput
-    python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput
-    echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db
+    /opt/local/bin/python2.7 manage.py syncdb --noinput  >> /var/log/fifo-install.log
+    /opt/local/bin/python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput  >> /var/log/fifo-install.log
+    echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db  >> /var/log/fifo-install.log
     cd -
     chown www:www -R /opt/graphite/
     cd /fifo
@@ -86,9 +88,9 @@ EOF
     curl -sO $BASE_PATH/$RELEASE/statsd.xml
     curl -sO $BASE_PATH/$RELEASE/carbon.xml
     echo "[GRAPHIT] Enabeling services"
-    svcadm enable apache
-    svccfg import statsd.xml
-    svccfg import carbon.xml
+    svcadm enable apache >> /var/log/fifo-install.log
+    svccfg import statsd.xml >> /var/log/fifo-install.log
+    svccfg import carbon.xml >> /var/log/fifo-install.log
     cd -
     echo "[GRAPHIT] one"
 }
