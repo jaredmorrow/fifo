@@ -82,7 +82,9 @@ install_chunter() {
     echo "[COMPONENT: $COMPONENT] Adding Service."
     mkdir -p /opt/custom/smf/
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
-    svccfg import /opt/$COMPONENT/$COMPONENT.xml >> /var/log/fifo-install.log
+    cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
+    svccfg import /opt/custom/smf/$COMPONENT.xml >> /var/log/fifo-install.log
+    svccfg import /opt/custom/smf/epmd.xml >> /var/log/fifo-install.log
     cd -
     echo "[COMPONENT: $COMPONENT] Done."
 
@@ -266,9 +268,6 @@ read_component() {
 	    echo "Please enter the IP for your hypervisor."
 	    read_ip
 	    OWN_IP=$IP
-	    echo "Please enter the IP for your zone."
-	    read_ip
-	    REDIS_IP=$IP
 	    install_chunter
 	    ;;
 	zone)
