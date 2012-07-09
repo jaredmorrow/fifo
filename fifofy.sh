@@ -39,9 +39,9 @@ graphit() {
     echo "[GRAPHIT] Installing: py2cairo"
     tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
-    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log
-    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log
-    CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log
     cd ..
     echo "[GRAPHIT] Installing: django-tagging"
     tar zxf django-tagging-0.3.1.tar.gz
