@@ -83,7 +83,9 @@ EOF
     /opt/local/bin/python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput  >> /var/log/fifo-install.log
     echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db  >> /var/log/fifo-install.log
     cd -
-    /opt/local/bin/chown www:www -R /opt/graphite/
+
+    /opt/local/bin/chown -R www:www /opt/graphite/
+
     cd /fifo
     echo "[GRAPHIT] Downloading service descriptors"
     curl -sO $BASE_PATH/$RELEASE/statsdconfig.js
