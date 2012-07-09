@@ -18,14 +18,12 @@ graphit() {
     /opt/local/bin/pkgin update >> /var/log/fifo-install.log
     echo "[GRAPHIT] Installing required packages (this will take a while!)"
     echo -n "[GRAPHIT] Installing packages"
-    for pkg in install python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted  python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted
+    for pkg in install python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto
     do
 	echo -n " $pkg"
 	/opt/local/bin/pkgin -y install $pkg >> /var/log/fifo-install.log 
     done
     echo " done."
-    echo "[GRAPHIT] Installing required packages 2nd part (this will take a while!)"
-    /opt/local/bin/pkgin -y install gcc-compiler gmake pkg-config xproto renderproto kbproto  >> /var/log/fifo-install.log
     export PATH="$PATH:/opt/local/bin"
     echo "[GRAPHIT] Installing statsd"
     /opt/local/bin/npm install statsd >> /var/log/fifo-install.log
