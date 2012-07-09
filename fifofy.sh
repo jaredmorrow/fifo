@@ -9,6 +9,7 @@ error() {
   echo "[ERROR] $1." >> /var/log/fifo/fifo-install.log
   echo "[ERROR] $1."
   echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
+  exit 1
 }
 
 graphit() {
@@ -108,6 +109,8 @@ uninstall() {
     vmadm delete $UUID
     svcadm disable chunter
     svcadm disable epmd
+    svccfg delete chunter
+    svccfg delete epmd
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
 }
