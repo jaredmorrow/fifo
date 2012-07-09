@@ -20,6 +20,7 @@ graphit() {
     /opt/local/bin/pkgin -y install python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted  >> /var/log/fifo-install.log
     echo "[GRAPHIT] Installing required packages 2nd part (this will take a while!)"
     /opt/local/bin/pkgin -y install gcc-compiler gmake pkg-config xproto renderproto kbproto  >> /var/log/fifo-install.log
+    export PATH="$PATH:/opt/local/bin"
     echo "[GRAPHIT] Installing statsd"
     /opt/local/bin/npm install statsd >> /var/log/fifo-install.log
     
@@ -57,6 +58,7 @@ graphit() {
     cd carbon-0.9.10
     /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
     cd ..
+    mkdir -p /opt/graphite/storage/log/carbon-cache
     echo "[GRAPHIT] Configuring: carbon"
     cd /opt/graphite/conf
     cp carbon.conf.example carbon.conf
@@ -81,7 +83,7 @@ EOF
     /opt/local/bin/python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput  >> /var/log/fifo-install.log
     echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db  >> /var/log/fifo-install.log
     cd -
-    chown www:www -R /opt/graphite/
+    /opt/local/bin/chown www:www -R /opt/graphite/
     cd /fifo
     echo "[GRAPHIT] Downloading service descriptors"
     curl -sO $BASE_PATH/$RELEASE/statsdconfig.js
