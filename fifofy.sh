@@ -74,7 +74,7 @@ EOF
     cd /opt/graphite/webapp/graphite
     cp local_settings.py.example local_settings.py
     cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
-    sed -i /opt/local/etc/httpd/httpd.conf -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/'
+    sed  -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/' -i bak /opt/local/etc/httpd/httpd.conf
     echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
     echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
     curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf 
