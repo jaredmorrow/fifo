@@ -12,6 +12,18 @@ error() {
   exit 1
 }
 
+download() {
+    curl -sLkO "$1" >> /var/log/fifo-install.log || error "Failed to download $1"
+}
+
+install_py_pkg() {
+    echo "[GRAPHIT] Installing: $1"
+    tar zxf $1.tar.gz
+    cd $1
+    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log || error "Failed to install $1"
+    cd ..
+}
+
 graphit() {
     echo "[GRAPHIT] Starting installation"
     cd /tmp
@@ -22,48 +34,37 @@ graphit() {
     for pkg in python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto
     do
 	echo -n " $pkg"
-	/opt/local/bin/pkgin -y install $pkg >> /var/log/fifo-install.log 
+	/opt/local/bin/pkgin -y install $pkg >> /var/log/fifo-install.log || error "Failed to install package ${pgk}."
     done
     echo " done."
     export PATH="$PATH:/opt/local/bin"
     echo "[GRAPHIT] Installing statsd"
-    /opt/local/bin/npm install statsd >> /var/log/fifo-install.log
+    /opt/local/bin/npm install statsd >> /var/log/fifo-install.log || error "Failed to install npm package statsd."
     
 #    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
     echo "[GRAPHIT] Downloadin additional packages"
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz >> /var/log/fifo-install.log
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz >> /var/log/fifo-install.log
-    curl -sLkO https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz >> /var/log/fifo-install.log
-    curl -sLkO http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2 >> /var/log/fifo-install.log
-    curl -sLkO http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz >> /var/log/fifo-install.log
-    echo "[GRAPHIT] Installing: whisper"
-    tar zxf whisper-0.9.10.tar.gz
-    cd whisper-0.9.10
-    /opt/local/bin/python2.7 setup.py install >> /var/log/fifo-install.log
-    cd ..
+    download https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
+    download https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
+    download https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
+    download http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
+    download http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
+
     echo "[GRAPHIT] Installing: py2cairo"
     tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
-    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log
-    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log
-    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log || error "Could not configure py2cairo."
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log || error "Could not build py2cairo."
+    CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log || error "Could not install py2cairo."
     cd ..
-    echo "[GRAPHIT] Installing: django-tagging"
-    tar zxf django-tagging-0.3.1.tar.gz
-    cd django-tagging-0.3.1
-    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
-    cd ..
-    echo "[GRAPHIT] Installing: graphite-web"
-    tar zxf graphite-web-0.9.10.tar.gz
-    cd graphite-web-0.9.10
-    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
-    cd ..
-    echo "[GRAPHIT] Installing: carbon"
-    tar zxf carbon-0.9.10.tar.gz
-    cd carbon-0.9.10
-    /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log
-    cd ..
+
+
+    install_py_pkg whisper-0.9.10
+    install_py_pkg django-tagging-0.3.1
+    install_py_pkg graphite-web-0.9.10
+    install_py_pkg carbon-0.9.10
+
     mkdir -p /opt/graphite/storage/log/carbon-cache
+
     echo "[GRAPHIT] Configuring: carbon"
     cd /opt/graphite/conf
     cp carbon.conf.example carbon.conf
@@ -97,7 +98,7 @@ EOF
     curl -sO $BASE_PATH/$RELEASE/statsd.xml
     curl -sO $BASE_PATH/$RELEASE/carbon.xml
     echo "[GRAPHIT] Enabeling services"
-    svcadm enable apache >> /var/log/fifo-install.log
+    svcadm enable apache >> /var/log/fifo-install.log 
     svccfg import statsd.xml >> /var/log/fifo-install.log
     svccfg import carbon.xml >> /var/log/fifo-install.log
     cd -
@@ -169,10 +170,10 @@ install_chunter() {
     mkdir -p /opt >> /var/log/fifo-install.log
     cd /opt >> /var/log/fifo-install.log
     echo "[COMPONENT: $COMPONENT] Downloading."
-    curl -sO $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2 >> /var/log/fifo-install.log
+    download $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2
     tar jxvf $COMPONENT.tar.bz2 >> /var/log/fifo-install.log
     echo "[COMPONENT: $COMPONENT] Cleanup."
-    rm $COMPONENT.tar.bz2 >> /var/log/fifo-install.log
+    rm $COMPONENT.tar.bz2 >> /var/log/fifo-install.log 
     echo "[COMPONENT: $COMPONENT] Configuring."
     FILE=$COMPONENT/releases/*/vm.args
     subs
@@ -180,13 +181,13 @@ install_chunter() {
     subs
     echo "[COMPONENT: $COMPONENT] Adding Service."
     mkdir -p /opt/custom/smf/
-    cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
-    svccfg import /opt/custom/smf/$COMPONENT.xml >> /var/log/fifo-install.log
+
     cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
-    svccfg import /opt/custom/smf/epmd.xml >> /var/log/fifo-install.log
+    svccfg import /opt/custom/smf/epmd.xml >> /var/log/fifo-install.log || error "Could not activate epmd."
+    cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
+    svccfg import /opt/custom/smf/$COMPONENT.xml >> /var/log/fifo-install.log || error "Could not activate chunter."
     cd -
     echo "[COMPONENT: $COMPONENT] Done."
-
 }
 
 
@@ -201,12 +202,11 @@ install_service() {
     mkdir -p /var/log/fifo/$COMPONENT >> /var/log/fifo-install.log
     cd /fifo >> /var/log/fifo-install.log
 
-    if [ ! -f $COMPONENT.tar.bz2 ] 
+    if [ -f $COMPONENT.tar.bz2 ] 
     then
-	echo "[COMPONENT: $COMPONENT] Downloading."
-	curl -sO $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2 >> /var/log/fifo-install.log
-    else
 	echo "[COMPONENT: $COMPONENT] Skipping downloading."
+    else
+	download $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2
     fi
     tar jxvf $COMPONENT.tar.bz2 >> /var/log/fifo-install.log
     echo "[COMPONENT: $COMPONENT] Cleanup."
@@ -217,8 +217,8 @@ install_service() {
     FILE=$COMPONENT/releases/*/sys.config
     subs 
     echo "[COMPONENT: $COMPONENT] Adding Service."
-    svccfg import /fifo/$COMPONENT/$COMPONENT.xml >> /var/log/fifo-install.log
-    svccfg import /fifo/$COMPONENT/epmd.xml >> /var/log/fifo-install.log
+    svccfg import /fifo/$COMPONENT/epmd.xml >> /var/log/fifo-install.log || error "Could not activate epmd."
+    svccfg import /fifo/$COMPONENT/$COMPONENT.xml >> /var/log/fifo-install.log || error "Could not activate ${COMPONENT}."
     echo "[COMPONENT: $COMPONENT] Done."
     cd -
 }
@@ -262,11 +262,16 @@ install_zone() {
     fi
     echo "[ZONE] Starting Zone installation."
     echo "[ZONE] Updating datasets."
-    $IMGADM update >> /var/log/fifo-install.log
-    echo "[ZONE] Importing dataset."
-    $IMGADM import $DATASET >> /var/log/fifo-install.log
+    if [ -d /zones/$DATASET ]
+    then
+	echo "[ZONE] Image $DATASET seems already isntalled."
+    else
+	$IMGADM update >> /var/log/fifo-install.log || error "Failed to update image repository."
+	echo "[ZONE] Importing dataset."
+	$IMGADM import $DATASET >> /var/log/fifo-install.log || error "Failed to import zone image."
+    fi
     echo "[ZONE] Creating VM."
-    vmadm create >> /var/log/fifo-install.log<<EOF
+    vmadm create >> /var/log/fifo-install.log<<EOF || error "Failed to create fifo zone!"
 {
   "brand": "joyent",
   "quota": 40,
@@ -288,44 +293,47 @@ install_zone() {
   ]
 }
 EOF
-    cp $0 /zones/fifo/root/root >> /var/log/fifo-install.log
+    cp $0 /zones/fifo/root/root >> /var/log/fifo-install.log 
     echo "[ZONE] Waiting..."
     while [ -f /zones/fifo/root/root/zoneinit ]
     do
 	sleep 5
     done
     sleep 30
-    zlogin fifo $0 redis $ZONE_IP
+    zlogin fifo $0 redis $ZONE_IP || exit "Reds installation failed exiting."
     echo "[ZONE] Prefetching services."
     mkdir -p /zones/fifo/root/fifo
     PWD=`pwd`
     cd /zones/fifo/root/fifo
     if [ -f $PWD/snarl.tar.bz2 ]
     then
+	echo "[ZONE] snarl tarbal found skipping download."
 	cp $PWD/snarl.tar.bz2 .
     else
-	curl -sO $BASE_PATH/$RELEASE/snarl.tar.bz2 >> /var/log/fifo-install.log
+	download $BASE_PATH/$RELEASE/snarl.tar.bz2
     fi
 
     if [ ! -f $PWD/sniffle.tar.bz2 ]
     then
+	echo "[ZONE] sniffle tarbal found skipping download."
 	cp $PWD/sniffle.tar.bz2 .
     else
-	curl -sO $BASE_PATH/$RELEASE/sniffle.tar.bz2 >> /var/log/fifo-install.log
+	download $BASE_PATH/$RELEASE/sniffle.tar.bz2
     fi
 
     if [ -f $PWD/wiggle.tar.bz2 ]
     then
-	cp $PWD/sniffle.tar.bz2 .
+	echo "[ZONE] wiggle tarbal found skipping download."
+	cp $PWD/wiggle.tar.bz2 .
 
     else
-	curl -sO $BASE_PATH/$RELEASE/wiggle.tar.bz2 >> /var/log/fifo-install.log
+	download $BASE_PATH/$RELEASE/wiggle.tar.bz2
     fi
     cd -
-    zlogin fifo $0 graphit
-    zlogin fifo $0 snarl $ZONE_IP
-    zlogin fifo $0 sniffle $ZONE_IP
-    zlogin fifo $0 wiggle $ZONE_IP
+    zlogin fifo $0 graphit || error "Graphit installation failed"
+    zlogin fifo $0 snarl $ZONE_IP || error "Snarl installation failed."
+    zlogin fifo $0 sniffle $ZONE_IP || error "Sniffle installation failed."
+    zlogin fifo $0 wiggle $ZONE_IP || error "Wiggle installation failed."
 
 }
 read_component() {
