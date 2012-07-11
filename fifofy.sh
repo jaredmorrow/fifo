@@ -6,8 +6,8 @@ COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
 error() {
-  echo "[ERROR] $1." >> /var/log/fifo/fifo-install.log
-  echo "[ERROR] $1."
+  echo "[ERROR] $1" >> /var/log/fifo/fifo-install.log
+  echo "[ERROR] $1"
   echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
   exit 1
 }
