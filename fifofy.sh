@@ -55,7 +55,7 @@ graphit() {
     msg "Updating packages"
     /opt/local/bin/pkgin update >> /var/log/fifo-install.log
     msg "Installing required packages (this will take a while!)"
-    n_smsg_start "Installing packages"
+    n_msg_start "Installing packages"
     for pkg in python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto
     do
 	msg " $pkg"
@@ -134,8 +134,8 @@ uninstall() {
     vmadm delete $UUID
     svcadm disable chunter
     svcadm disable epmd
-    svccfg delete chunter
-    svccfg delete epmd
+    svccfg delete -f chunter
+    svccfg delete -f epmd
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
 }
