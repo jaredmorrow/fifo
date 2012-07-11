@@ -5,11 +5,35 @@ REDIS_DOMAIN="fifo"
 COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
+msg() {
+    if [ "${N}" == "true" ]
+    then
+	echo -n "$1"
+	echo -n "$1" >> /var/log/fifo-install.log
+
+    else
+	echo "[$C] $1"
+	echo "[$C] $1" >> /var/log/fifo-install.log
+    fi
+}
+
+n_msg_start() {
+    N="true"
+    echo -n "[$C] $1"
+    echo -n "[$C] $1" >> /var/log/fifo-install.log
+}
+n_msg_end() {
+    N=""
+    echo "$1"
+    echo "$1" >> /var/log/fifo-install.log
+}
+
+
+
 error() {
-  echo "[ERROR] $1" >> /var/log/fifo/fifo-install.log
-  echo "[ERROR] $1"
-  echo "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
-  exit 1
+    msg "[ERROR] $1"
+    msg "[ERROR] I'm going to stop now, please look at /var/log/fifo/fifo-install.log for details."
+    exit 1
 }
 
 download() {
@@ -17,7 +41,7 @@ download() {
 }
 
 install_py_pkg() {
-    echo "[GRAPHIT] Installing: $1"
+    msg "Installing: $1"
     tar zxf $1.tar.gz
     cd $1
     /opt/local/bin/python2.7 setup.py install  >> /var/log/fifo-install.log || error "Failed to install $1"
@@ -25,38 +49,38 @@ install_py_pkg() {
 }
 
 graphit() {
-    echo "[GRAPHIT] Starting installation"
+    C="GRAPHIT"
+    msg "Starting installation"
     cd /tmp
-    echo "[GRAPHIT] Updating packages"
+    msg "Updating packages"
     /opt/local/bin/pkgin update >> /var/log/fifo-install.log
-    echo "[GRAPHIT] Installing required packages (this will take a while!)"
-    echo -n "[GRAPHIT] Installing packages"
+    msg "Installing required packages (this will take a while!)"
+    n_smsg_start "Installing packages"
     for pkg in python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto
     do
-	echo -n " $pkg"
+	msg " $pkg"
 	/opt/local/bin/pkgin -y install $pkg >> /var/log/fifo-install.log || error "Failed to install package ${pgk}."
     done
-    echo " done."
+    n_msg_end " done."
     export PATH="$PATH:/opt/local/bin"
-    echo "[GRAPHIT] Installing statsd"
+    msg "Installing statsd"
     /opt/local/bin/npm install statsd >> /var/log/fifo-install.log || error "Failed to install npm package statsd."
     
 #    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
-    echo "[GRAPHIT] Downloadin additional packages"
+    msg "Downloadin additional packages"
     download https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
     download https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
     download https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
     download http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
     download http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
 
-    echo "[GRAPHIT] Installing: py2cairo"
+    msg "Installing: py2cairo"
     tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  >> /var/log/fifo-install.log || error "Could not configure py2cairo."
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  >> /var/log/fifo-install.log || error "Could not build py2cairo."
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  >> /var/log/fifo-install.log || error "Could not install py2cairo."
     cd ..
-
 
     install_py_pkg whisper-0.9.10
     install_py_pkg django-tagging-0.3.1
@@ -65,7 +89,7 @@ graphit() {
 
     mkdir -p /opt/graphite/storage/log/carbon-cache
 
-    echo "[GRAPHIT] Configuring: carbon"
+    msg "Configuring: carbon"
     cd /opt/graphite/conf
     cp carbon.conf.example carbon.conf
     cp storage-schemas.conf.example storage-schemas.conf
@@ -76,7 +100,7 @@ pattern = ^stats\..*
 retentions = 1:1h,10:2160,60:10080,600:262974
 EOF
     cd -
-    echo "[GRAPHIT] Configuring: web frontend"
+    msg "Configuring: web frontend"
     cd /opt/graphite/webapp/graphite
     cp local_settings.py.example local_settings.py
     cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
@@ -84,7 +108,7 @@ EOF
     echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
     echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
     curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf 
-    echo "[GRAPHIT] Configuring: database"
+    msg "Configuring: database"
     /opt/local/bin/python2.7 manage.py syncdb --noinput  >> /var/log/fifo-install.log
     /opt/local/bin/python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput  >> /var/log/fifo-install.log
     echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db  >> /var/log/fifo-install.log
@@ -93,16 +117,16 @@ EOF
     /opt/local/bin/chown -R www:www /opt/graphite/
 
     cd /fifo
-    echo "[GRAPHIT] Downloading service descriptors"
+    msg "Downloading service descriptors"
     curl -sO $BASE_PATH/$RELEASE/statsdconfig.js
     curl -sO $BASE_PATH/$RELEASE/statsd.xml
     curl -sO $BASE_PATH/$RELEASE/carbon.xml
-    echo "[GRAPHIT] Enabeling services"
+    msg "Enabeling services"
     svcadm enable apache >> /var/log/fifo-install.log 
     svccfg import statsd.xml >> /var/log/fifo-install.log
     svccfg import carbon.xml >> /var/log/fifo-install.log
     cd -
-    echo "[GRAPHIT] one"
+    msg "done"
 }
 
 uninstall() {
@@ -151,7 +175,7 @@ read_ip() {
 }
 
 subs() {
-    echo "[SUBS $FILE] replacing placeholders."
+    echo "[$FILE] Replacing placeholders."
     sed -e "s;_OWN_IP_;$OWN_IP;" -i bak $FILE
     sed -e "s;_FIFOCOOKIE_;$COOKIE;" -i bak $FILE
     sed -e "s;_STATSD_IP_;$STATSD_IP;" -i bak $FILE
@@ -160,26 +184,26 @@ subs() {
 }
 
 install_chunter() {
-    echo "[COMPONENT: $COMPONENT] Starting installation"
+    C=$COMPONENT
+    msg "Starting installation"
     if [ `zonename` != "global" ]
     then
-	echo "chunter can only be installed in the global zone!"
-	exit 1
+	error "Chunter can only be installed in the global zone!"
     fi
     mkdir -p /var/log/fifo/$COMPONENT >> /var/log/fifo-install.log
     mkdir -p /opt >> /var/log/fifo-install.log
     cd /opt >> /var/log/fifo-install.log
-    echo "[COMPONENT: $COMPONENT] Downloading."
+    msg "Downloading."
     download $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2
     tar jxvf $COMPONENT.tar.bz2 >> /var/log/fifo-install.log
-    echo "[COMPONENT: $COMPONENT] Cleanup."
+    msg "Cleanup."
     rm $COMPONENT.tar.bz2 >> /var/log/fifo-install.log 
-    echo "[COMPONENT: $COMPONENT] Configuring."
+    msg "Configuring."
     FILE=$COMPONENT/releases/*/vm.args
     subs
     FILE=$COMPONENT/releases/*/sys.config
     subs
-    echo "[COMPONENT: $COMPONENT] Adding Service."
+    msg "Adding Service."
     mkdir -p /opt/custom/smf/
 
     cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
@@ -187,16 +211,16 @@ install_chunter() {
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/$COMPONENT.xml >> /var/log/fifo-install.log || error "Could not activate chunter."
     cd -
-    echo "[COMPONENT: $COMPONENT] Done."
+    msg "Done."
 }
 
 
 install_service() {
-    echo "[COMPONENT: $COMPONENT] Starting installation"
+    C=$COMPONENT
+    msg "Starting installation"
     if [ `zonename` == "global" ]
     then
-	echo "$COMPONENT can not be installed in the global zone!"
-	#	exit 1
+	error "$COMPONENT can not be installed in the global zone!"
     fi
     mkdir -p /fifo >> /var/log/fifo-install.log 
     mkdir -p /var/log/fifo/$COMPONENT >> /var/log/fifo-install.log
@@ -204,7 +228,7 @@ install_service() {
 
     if [ -f $COMPONENT.tar.bz2 ] 
     then
-	echo "[COMPONENT: $COMPONENT] Skipping downloading."
+	msg "Skipping downloading."
     else
 	download $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2
     fi
@@ -219,12 +243,13 @@ install_service() {
     echo "[COMPONENT: $COMPONENT] Adding Service."
     svccfg import /fifo/$COMPONENT/epmd.xml >> /var/log/fifo-install.log || error "Could not activate epmd."
     svccfg import /fifo/$COMPONENT/$COMPONENT.xml >> /var/log/fifo-install.log || error "Could not activate ${COMPONENT}."
-    echo "[COMPONENT: $COMPONENT] Done."
+    msg "Done."
     cd -
 }
 
 install_redis() {
-    echo "[REDIS] Installing."
+    C="REDIS"
+    msg "Installing."
     if [ `zonename` == "global" ]
     then
 	echo "$COMPONENT can not be installed in the global zone!"
@@ -232,16 +257,17 @@ install_redis() {
     fi
     /opt/local/bin/pkgin update >> /var/log/fifo-install.log
     /opt/local/bin/pkgin -y install redis >> /var/log/fifo-install.log
-    echo "[REDIS] Fixing SVM."
+    msg "Fixing SVM."
     curl -sO  $BASE_PATH/$RELEASE/redis.xml >> /var/log/fifo-install.log
     svccfg import redis.xml >> /var/log/fifo-install.log
     rm redis.xml >> /var/log/fifo-install.log
-    echo "[REDIS] Enabeling."
+    msg "Enabeling."
     svcadm enable redis >> /var/log/fifo-install.log
-    echo "[REDIS] Done."
+    msg "Done."
 }
 
 install_zone() {
+    C="ZONE"
     IMGADM=dsadm
     if [ -f /usr/sbin/imgadm ] 
     then
@@ -260,17 +286,17 @@ install_zone() {
 	    cd $PWD
 	fi
     fi
-    echo "[ZONE] Starting Zone installation."
-    echo "[ZONE] Updating datasets."
+    msg "Starting Zone installation."
+    msg "Updating datasets."
     if [ -d /zones/$DATASET ]
     then
-	echo "[ZONE] Image $DATASET seems already isntalled."
+	msg "Image $DATASET seems already isntalled."
     else
 	$IMGADM update >> /var/log/fifo-install.log || error "Failed to update image repository."
-	echo "[ZONE] Importing dataset."
+	msg "Importing dataset."
 	$IMGADM import $DATASET >> /var/log/fifo-install.log || error "Failed to import zone image."
     fi
-    echo "[ZONE] Creating VM."
+    msg "Creating VM."
     vmadm create >> /var/log/fifo-install.log<<EOF || error "Failed to create fifo zone!"
 {
   "brand": "joyent",
@@ -294,20 +320,22 @@ install_zone() {
 }
 EOF
     cp $0 /zones/fifo/root/root >> /var/log/fifo-install.log 
-    echo "[ZONE] Waiting..."
+    n_msg_start "Waiting for zone installation"
     while [ -f /zones/fifo/root/root/zoneinit ]
     do
+	msg "."
 	sleep 5
     done
+    msg "done."
     sleep 30
     zlogin fifo $0 redis $ZONE_IP || exit "Reds installation failed exiting."
-    echo "[ZONE] Prefetching services."
+    msg "Prefetching services."
     mkdir -p /zones/fifo/root/fifo
     PWD=`pwd`
     cd /zones/fifo/root/fifo
     if [ -f $PWD/snarl.tar.bz2 ]
     then
-	echo "[ZONE] snarl tarbal found skipping download."
+	msg "snarl tarbal found skipping download."
 	cp $PWD/snarl.tar.bz2 .
     else
 	download $BASE_PATH/$RELEASE/snarl.tar.bz2
@@ -315,7 +343,7 @@ EOF
 
     if [ ! -f $PWD/sniffle.tar.bz2 ]
     then
-	echo "[ZONE] sniffle tarbal found skipping download."
+	msg "sniffle tarbal found skipping download."
 	cp $PWD/sniffle.tar.bz2 .
     else
 	download $BASE_PATH/$RELEASE/sniffle.tar.bz2
@@ -323,7 +351,7 @@ EOF
 
     if [ -f $PWD/wiggle.tar.bz2 ]
     then
-	echo "[ZONE] wiggle tarbal found skipping download."
+	msg "wiggle tarbal found skipping download."
 	cp $PWD/wiggle.tar.bz2 .
 
     else
