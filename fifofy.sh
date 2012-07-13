@@ -439,7 +439,7 @@ read_component() {
 	    (
 		mkdir -p /tmp/fifo
 		cd /tmp/fifo
-		cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/fifo/* .
+		cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/fifo/* /var/log/fifo-install.log /zones/fifo/root/var/log/fifo-install.log .
 		ps -afe | grep [r]un_erl > ps.log
 		cd /tmp
 		gtar cjvf fifo-debug.tar.bz2 fifo
