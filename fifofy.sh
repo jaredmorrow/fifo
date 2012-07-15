@@ -104,7 +104,7 @@ EOF
     cd /opt/graphite/webapp/graphite
     cp local_settings.py.example local_settings.py
     cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
-    sed  -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/' -i bak /opt/local/etc/httpd/httpd.conf
+    sed -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/' -ibak /opt/local/etc/httpd/httpd.conf
     echo "LoadModule wsgi_module lib/httpd/mod_wsgi.so" >> /opt/local/etc/httpd/httpd.conf
     echo "Include etc/httpd/httpd-vhosts.conf" >> /opt/local/etc/httpd/httpd.conf
     curl -s $BASE_PATH/$RELEASE/httpd-vhosts.conf > /opt/local/etc/httpd/httpd-vhosts.conf 
@@ -176,11 +176,11 @@ read_ip() {
 
 subs() {
     echo "[$FILE] Replacing placeholders."
-    sed -e "s;_OWN_IP_;$OWN_IP;" -i bak $FILE
-    sed -e "s;_FIFOCOOKIE_;$COOKIE;" -i bak $FILE
-    sed -e "s;_STATSD_IP_;$STATSD_IP;" -i bak $FILE
-    sed -e "s;_REDIS_URL_;redis://$REDIS_IP;" -i bak $FILE
-    sed -e "s;_REDIS_DOMAIN_;$REDIS_DOMAIN;" -i bak $FILE
+    sed -e "s;_OWN_IP_;$OWN_IP;" -ibak $FILE
+    sed -e "s;_FIFOCOOKIE_;$COOKIE;" -ibak $FILE
+    sed -e "s;_STATSD_IP_;$STATSD_IP;" -ibak $FILE
+    sed -e "s;_REDIS_URL_;redis://$REDIS_IP;" -ibak $FILE
+    sed -e "s;_REDIS_DOMAIN_;$REDIS_DOMAIN;" -ibak $FILE
 }
 
 install_chunter() {
