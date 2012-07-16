@@ -399,7 +399,6 @@ read_component() {
 	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
 	    install_zone
-	    STATSD_IP=$ZONE_IP
 	    COMPONENT=chunter
 	    install_chunter 
 	    ;;
@@ -407,9 +406,6 @@ read_component() {
 	    echo "Please enter the IP for your hypervisor."
 	    read_ip
 	    OWN_IP=$IP
-	    echo "Please enter the IP for your statsd server."
-	    read_ip
-	    STATSD_IP=$IP
 	    install_chunter
 	    ;;
 	graphit)
