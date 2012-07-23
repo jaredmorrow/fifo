@@ -176,6 +176,8 @@ read_ip() {
 
 subs() {
     echo "[$FILE] Replacing placeholders."
+    HOST="`uname -n`.local"
+    sed -e "s;_HOST_;$HOST;" -ibak $FILE
     sed -e "s;_OWN_IP_;$OWN_IP;" -ibak $FILE
     sed -e "s;_FIFOCOOKIE_;$COOKIE;" -ibak $FILE
     sed -e "s;_STATSD_IP_;$STATSD_IP;" -ibak $FILE
