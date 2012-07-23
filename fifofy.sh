@@ -176,7 +176,12 @@ read_ip() {
 
 subs() {
     echo "[$FILE] Replacing placeholders."
-    HOST="`uname -n`.local"
+
+    if uname -n | grep '\.local$'; then
+	HOST=`uname -n`
+    else
+	HOST="`uname -n`.local"
+    fi
     sed -e "s;_HOST_;$HOST;" -ibak $FILE
     sed -e "s;_OWN_IP_;$OWN_IP;" -ibak $FILE
     sed -e "s;_FIFOCOOKIE_;$COOKIE;" -ibak $FILE
