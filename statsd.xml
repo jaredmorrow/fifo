@@ -16,7 +16,7 @@ Copied form redis empd script and modified to fit fifo
     <method_context>
       <method_credential group='www' user='www'/>
     </method_context>
-    <exec_method name='start' type='method' exec='/opt/local/bin/node /root/.npm/statsd/0.4.0/package/stats.js /fifo/statsdconfig.js &amp;' timeout_seconds='60'/>
+    <exec_method name='start' type='method' exec='/opt/local/bin/node /root/.npm/statsd/0.5.0/package/stats.js /fifo/statsdconfig.js &amp;' timeout_seconds='60'/>
     <exec_method name='stop' type='method' exec=':kill' timeout_seconds='60'/>
     <property_group name='startd' type='framework'>
       <propval name='duration' type='astring' value='contract'/>

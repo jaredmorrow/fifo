@@ -2,6 +2,7 @@
 BASE_PATH="__BASE_URL__"
 RELEASE="__REL__"
 REDIS_DOMAIN="fifo"
+DOMAIN="local"
 COOKIE="fifo"
 DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
 
@@ -177,10 +178,10 @@ read_ip() {
 subs() {
     echo "[$FILE] Replacing placeholders."
 
-    if uname -n | grep '\.local$'; then
+    if uname -n | grep "\.${DOMAIN}\$"; then
 	HOST=`uname -n`
     else
-	HOST="`uname -n`.local"
+	HOST="`uname -n`.$DOMAIN"
     fi
     sed -e "s;_HOST_;$HOST;" -ibak $FILE
     sed -e "s;_OWN_IP_;$OWN_IP;" -ibak $FILE
