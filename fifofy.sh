@@ -4,7 +4,7 @@ RELEASE="__REL__"
 REDIS_DOMAIN="fifo"
 DOMAIN="local"
 COOKIE="fifo"
-DATASET="f9e4be48-9466-11e1-bc41-9f993f5dff36"
+DATASET="8418dccc-c9c6-11e1-91f4-5fb387d839c5"
 
 msg() {
     if [ "${N}" == "true" ]
@@ -29,6 +29,47 @@ n_msg_end() {
     echo "$1" &>> /var/log/fifo-install.log
 }
 
+
+unboud(){
+    C="unbound"
+    cd /tmp
+    msg "Starting unbound installation."
+    download http://www.nlnetlabs.nl/downloads/ldns/ldns-1.6.13.tar.gz
+    download http://www.unbound.net/downloads/unbound-1.4.17.tar.gz
+    msg "Installing ldns"
+    tar zxf ldns-1.6.13.tar.gz &>> /var/log/fifo-install.log
+    cd ldns-1.6.13
+    ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure ldns"
+    make &>> /var/log/fifo-install.log || error "Failed to compile ldns"
+    make install &>> /var/log/fifo-install.log
+    cd ..
+    
+    msg "Installing unbound"
+    tar zxf unbound-1.4.17.tar.gz &>> /var/log/fifo-install.log
+    cd unbound-1.4.17
+    ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure unbound."
+    make &>> /var/log/fifo-install.log || error "Failed to make unbound."
+    make install &>> /var/log/fifo-install.log || error "Failed to install unbound."
+    cd ..
+    msg "Addung user and goup for unbound."
+    groupadd unbound &>> /var/log/fifo-install.log
+    useradd -g unbound unbound &>> /var/log/fifo-install.log
+    msg "Running initial setup."
+    unbound-control-setup &>> /var/log/fifo-install.log || erro "Setup failed!"
+    msg "Creating config file."
+    cat <<EOF >> /opt/local/etc/unbound/unbound.conf
+server:
+  verbosity: 1
+local-zone: "local." static
+  local-data: "fifo.local. IN A $ZONE_IP"
+remote-control:
+  control-enable: yes
+  control-interface: 127.0.0.1
+forward-zone:
+  name: "."
+  forward-addr: $ZONE_DNS
+EOF
+}
 
 
 error() {
@@ -57,7 +98,7 @@ graphit() {
     /opt/local/bin/pkgin update &>> /var/log/fifo-install.log
     msg "Installing required packages (this will take a while!)"
     n_msg_start "Installing packages"
-    for pkg in python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc-compiler gmake pkg-config xproto renderproto kbproto
+    for pkg in python27 nodejs py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc47-4.7.0nb1 gmake pkg-config xproto renderproto kbproto
     do
 	msg " $pkg"
 	/opt/local/bin/pkgin -y install $pkg &>> /var/log/fifo-install.log || error "Failed to install package ${pgk}."
@@ -220,6 +261,7 @@ install_chunter() {
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate chunter."
     cd -
+    echo "nameserver $ZONE_IP" >> /etc/resolve.conf
     msg "Done."
 }
 
@@ -368,6 +410,7 @@ EOF
     fi
     cd -
     zlogin fifo $0 graphit || error "Graphit installation failed"
+    zlogin fifo $0 unbound $ZONE_IP $ZONE_DNS || error "Graphit installation failed"
     zlogin fifo $0 snarl $ZONE_IP || error "Snarl installation failed."
     zlogin fifo $0 sniffle $ZONE_IP || error "Sniffle installation failed."
     zlogin fifo $0 wiggle $ZONE_IP || error "Wiggle installation failed."
@@ -390,6 +433,15 @@ read_component() {
 	    ;;
 	redis)
 	    install_redis
+	    ;;
+	unbound)
+	    echo "Please enter the IP for your zone."
+	    read_ip
+	    ZONE_IP=$IP
+	    echo "Please enter the DNS for your zone."
+	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
+	    ZONE_DNS=$IP
+	    unbound
 	    ;;
 	all)
 	    echo "Please enter the IP for your hypervisor."
@@ -415,6 +467,9 @@ read_component() {
 	    echo "Please enter the IP for your hypervisor."
 	    read_ip
 	    OWN_IP=$IP
+	    echo "Please enter the IP for your zone."
+	    read_ip
+	    ZONE_IP=$IP
 	    install_chunter
 	    ;;
 	graphit)
