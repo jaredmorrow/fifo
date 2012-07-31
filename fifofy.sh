@@ -378,7 +378,7 @@ EOF
 	sleep 5
     done
     msg "done."
-    sleep 30
+    sleep 45
     zlogin fifo $0 redis $ZONE_IP || exit "Reds installation failed exiting."
     msg "Prefetching services."
     mkdir -p /zones/fifo/root/fifo
