@@ -4,7 +4,7 @@ RELEASE="__REL__"
 REDIS_DOMAIN="fifo"
 DOMAIN="local"
 COOKIE="fifo"
-DATASET="8418dccc-c9c6-11e1-91f4-5fb387d839c5"
+DATASET="8da4bc54-d77f-11e1-8f6f-cfe8e7177a23"
 
 msg() {
     if [ "${N}" == "true" ]
