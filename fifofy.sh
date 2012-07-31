@@ -372,13 +372,13 @@ install_zone() {
 EOF
     cp $0 /zones/fifo/root/root &>> /var/log/fifo-install.log 
     n_msg_start "Waiting for zone installation"
-    while [ -f /zones/fifo/root/root/zoneinit ]
+    while [ -f /zones/fifo/root/root/zoneconfig ]
     do
 	msg "."
 	sleep 5
     done
     msg "done."
-    sleep 45
+    sleep 30
     zlogin fifo $0 redis $ZONE_IP || exit "Reds installation failed exiting."
     msg "Prefetching services."
     mkdir -p /zones/fifo/root/fifo
