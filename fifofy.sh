@@ -30,7 +30,7 @@ n_msg_end() {
 }
 
 
-unboud(){
+install_unbound(){
     C="unbound"
     cd /tmp
     msg "Starting unbound installation."
@@ -98,7 +98,7 @@ graphit() {
     /opt/local/bin/pkgin update &>> /var/log/fifo-install.log
     msg "Installing required packages (this will take a while!)"
     n_msg_start "Installing packages"
-    for pkg in python27 nodejs-0.8.3 py27-memcached memcached py27-ZopeInterface zope3 cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc47-4.7.0nb1 gmake pkg-config xproto renderproto kbproto
+    for pkg in python27 nodejs-0.8.3 py27-memcached memcached py27-ZopeInterface cairo ap22-py27-python py27-django sqlite ap22-py27-wsgi py27-sqlite2 sqlite py27-twisted gcc47-4.7.0nb1 gmake pkg-config xproto renderproto kbproto
     do
 	msg " $pkg"
 	/opt/local/bin/pkgin -y install $pkg &>> /var/log/fifo-install.log || error "Failed to install package ${pgk}."
@@ -442,7 +442,7 @@ read_component() {
 	    echo "Please enter the DNS for your zone."
 	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
-	    unbound
+	    install_unbound
 	    ;;
 	all)
 	    echo "Please enter the IP for your hypervisor."
