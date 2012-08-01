@@ -71,9 +71,9 @@ forward-zone:
   forward-addr: $ZONE_DNS
 EOF
     
-    curl -sO $BASE_PATH/$RELEASE/unbound.xml
     cd /fifo
-    svccfg import /unbound.xml
+    curl -sO $BASE_PATH/$RELEASE/unbound.xml
+    svccfg import unbound.xml
     cd
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
 }
