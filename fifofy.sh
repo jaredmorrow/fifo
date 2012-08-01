@@ -62,6 +62,7 @@ server:
   verbosity: 1
 local-zone: "local." static
   local-data: "fifo.local. IN A $ZONE_IP"
+  local-data: "$HOSTNAME.local. IN A $HYPERVISOR_IP"
 remote-control:
   control-enable: yes
   control-interface: 127.0.0.1
@@ -69,6 +70,12 @@ forward-zone:
   name: "."
   forward-addr: $ZONE_DNS
 EOF
+    
+    curl -sO $BASE_PATH/$RELEASE/unbound.xml
+    cd /fifo
+    svccfg import /unbound.xml
+    cd
+    echo "nameserver 127.0.0.1" > /etc/resolv.conf
 }
 
 
@@ -215,6 +222,36 @@ read_ip() {
 	read_ip
     fi
 }
+
+
+read_value() {
+    if [ "x${IP1}x" == "xx" ]
+    then
+	if [ "x${1}x" != "xx" ]
+	then
+	    read -p "ip($1)> " IP
+	    if [ "x${IP}x" == "xx" ]
+	    then
+		IP=$1
+	    fi
+	else
+	    read -p "ip> " IP
+	fi
+    else
+	VALUE=$IP1
+	if [ "$IP" == "-d" ]
+	then
+	    IP=$1
+	fi
+	IP1=$IP2
+	IP2=$IP3
+	IP3=$IP4
+	IP4=$IP5
+	IP5=""
+    fi
+    true
+}
+
 
 subs() {
     echo "[$FILE] Replacing placeholders."
@@ -442,12 +479,23 @@ read_component() {
 	    echo "Please enter the DNS for your zone."
 	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
+
+	    echo "Please enter the Hypervisor IP."
+	    read_ip
+	    HYPERVISOR_IP=$IP
+
+	    echo "Please enter the hostname."
+	    read_value
+	    HOSTNAME=$VALUE
+
 	    install_unbound
 	    ;;
 	all)
+	    HOSTNAME=`hostname`
 	    echo "Please enter the IP for your hypervisor."
 	    read_ip
 	    OWN_IP=$IP
+	    HYPERVISOR_IP=$IP
 	    echo "Please enter the IP for your zone."
 	    read_ip
 	    ZONE_IP=$IP
