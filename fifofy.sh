@@ -447,7 +447,7 @@ EOF
     fi
     cd -
     zlogin fifo $0 graphit || error "Graphit installation failed"
-    zlogin fifo $0 unbound $ZONE_IP $ZONE_DNS || error "Graphit installation failed"
+    zlogin fifo $0 unbound $ZONE_IP $ZONE_DNS $HYPERVISOR_IP $HOSTNAME || error "Unbound installation failed"
 
     zlogin fifo $0 snarl $ZONE_IP || error "Snarl installation failed."
     zlogin fifo $0 sniffle $ZONE_IP || error "Sniffle installation failed."
