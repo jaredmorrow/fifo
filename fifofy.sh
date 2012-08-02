@@ -421,7 +421,7 @@ EOF
 	download $BASE_PATH/$RELEASE/snarl.tar.bz2
     fi
 
-    if [ ! -f $PWD/sniffle.tar.bz2 ]
+    if [ -f $PWD/sniffle.tar.bz2 ]
     then
 	msg "sniffle tarbal found skipping download."
 	cp $PWD/sniffle.tar.bz2 .
