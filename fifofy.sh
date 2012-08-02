@@ -187,6 +187,7 @@ uninstall() {
     svccfg delete -f epmd
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
+    rm -rf /var/log/fifo*
 }
 read_ip() {
     if [ "x${IP1}x" == "xx" ]
