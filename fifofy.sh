@@ -526,7 +526,7 @@ read_component() {
 	    ;;
 	graphit)
 	    echo "installing graphite."
-	    graphit
+	    install_graphit
 	    ;;
 	zone)
 	    echo "Please enter the IP for your zone."
