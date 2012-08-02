@@ -446,6 +446,7 @@ EOF
     else
 	download $BASE_PATH/$RELEASE/modules.tar.bz2
     fi
+    tar jxf modules.tar.bz2
     cd -
 
 
