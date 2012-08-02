@@ -32,12 +32,9 @@ n_msg_end() {
 
 install_unbound(){
     C="unbound"
-    cd /tmp
+    cd /fifo/modules
     msg "Starting unbound installation."
-    download http://www.nlnetlabs.nl/downloads/ldns/ldns-1.6.13.tar.gz
-    download http://www.unbound.net/downloads/unbound-1.4.17.tar.gz
     msg "Installing ldns"
-    tar zxf ldns-1.6.13.tar.gz &>> /var/log/fifo-install.log
     cd ldns-1.6.13
     ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure ldns"
     make &>> /var/log/fifo-install.log || error "Failed to compile ldns"
@@ -45,7 +42,6 @@ install_unbound(){
     cd ..
     
     msg "Installing unbound"
-    tar zxf unbound-1.4.17.tar.gz &>> /var/log/fifo-install.log
     cd unbound-1.4.17
     ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure unbound."
     make &>> /var/log/fifo-install.log || error "Failed to make unbound."
@@ -91,16 +87,15 @@ download() {
 
 install_py_pkg() {
     msg "Installing: $1"
-    tar zxf $1.tar.gz
     cd $1
     /opt/local/bin/python2.7 setup.py install  &>> /var/log/fifo-install.log || error "Failed to install $1"
     cd ..
 }
 
-graphit() {
+install_graphit() {
     C="GRAPHIT"
     msg "Starting installation"
-    cd /tmp
+    cd /fifo/modules
     msg "Updating packages"
     /opt/local/bin/pkgin update &>> /var/log/fifo-install.log
     msg "Installing required packages (this will take a while!)"
@@ -115,16 +110,7 @@ graphit() {
     msg "Installing statsd"
     /opt/local/bin/npm install statsd &>> /var/log/fifo-install.log || error "Failed to install npm package statsd."
     
-#    curl -LkO https://launchpad.net/graphite/0.9/0.9.10/+download/check-dependencies.py
-    msg "Downloadin additional packages"
-    download https://launchpad.net/graphite/0.9/0.9.10/+download/graphite-web-0.9.10.tar.gz
-    download https://launchpad.net/graphite/0.9/0.9.10/+download/carbon-0.9.10.tar.gz
-    download https://launchpad.net/graphite/0.9/0.9.10/+download/whisper-0.9.10.tar.gz
-    download http://cairographics.org/releases/py2cairo-1.10.0.tar.bz2
-    download http://django-tagging.googlecode.com/files/django-tagging-0.3.1.tar.gz
-
     msg "Installing: py2cairo"
-    tar jxf py2cairo-1.10.0.tar.bz2 
     cd py2cairo-1.10.0
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  &>> /var/log/fifo-install.log || error "Could not configure py2cairo."
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  &>> /var/log/fifo-install.log || error "Could not build py2cairo."
@@ -188,6 +174,7 @@ uninstall() {
     /opt/chunter/bin/chunter stop
     rm -rf /opt/chunter
     rm -rf /var/log/fifo*
+    ps -afe | grep epmd | awk '{print $2}' | xargs kill
 }
 read_ip() {
     if [ "x${IP1}x" == "xx" ]
@@ -450,7 +437,18 @@ EOF
     else
 	download $BASE_PATH/$RELEASE/wiggle.tar.bz2
     fi
+
+    if [ -f $PWD/modules.tar.bz2 ]
+    then
+	msg "wiggle tarbal found skipping download."
+	cp $PWD/modules.tar.bz2 .
+
+    else
+	download $BASE_PATH/$RELEASE/modules.tar.bz2
+    fi
     cd -
+
+
     zlogin fifo $0 graphit || error "Graphit installation failed"
     zlogin fifo $0 unbound $ZONE_IP $ZONE_DNS $HYPERVISOR_IP $HOSTNAME || error "Unbound installation failed"
 
