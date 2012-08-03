@@ -33,7 +33,7 @@ n_msg_end() {
 install_dnsmasq(){
     C="dnsmasq"
     msg "Starting dnsmasq installation."
-    pkgin install dnsmasq
+    pkgin -y install dnsmasq
     cat <<EOF > /opt/local/etc/dnsmasq.conf
 domain-needed
 bogus-priv
