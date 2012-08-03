@@ -268,7 +268,10 @@ install_chunter() {
     svccfg import /opt/custom/smf/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate chunter."
     cd -
     msg "Adding fifo DNS server."
-    echo "nameserver $ZONE_IP" >> /etc/resolv.conf
+
+    echo "nameserver $ZONE_IP" > /tmp/resolv.conf    
+    grep -v  "nameserver $ZONE_IP" /etc/resolv.conf  >> /tmp/resolv.conf 
+    cp /tmp/resolv.conf /etc/resolv.conf
     msg "Restarting NSCD."
     /etc/init.d/nscd stop
     /etc/init.d/nscd start
