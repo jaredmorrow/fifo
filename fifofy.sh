@@ -33,7 +33,8 @@ n_msg_end() {
 install_dnsmasq(){
     C="dnsmasq"
     msg "Starting dnsmasq installation."
-    pkgin -y install dnsmasq
+    pkgin -y install dnsmasq &>> /var/log/fifo-install.log
+    msg "Configuring dnsmasq."
     cat <<EOF > /opt/local/etc/dnsmasq.conf
 domain-needed
 bogus-priv
@@ -51,6 +52,7 @@ EOF
     echo <<EOF > /fifo/hosts
 $HYPERVISOR_IP $HOSTNAME.local
 EOF
+    msg "Enabeling dnsmasq."
     svcadm enable dnsmasq
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
 }
