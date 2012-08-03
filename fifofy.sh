@@ -392,7 +392,7 @@ EOF
 	msg "."
 	sleep 5
     done
-    msg "done."
+    n_msg_end "done."
     sleep 30
     zlogin fifo $0 redis $ZONE_IP || exit "Reds installation failed exiting."
     msg "Prefetching services."
