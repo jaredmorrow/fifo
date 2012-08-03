@@ -6,6 +6,8 @@ DOMAIN="local"
 COOKIE="fifo"
 DATASET="8da4bc54-d77f-11e1-8f6f-cfe8e7177a23"
 
+
+
 msg() {
     if [ "${N}" == "true" ]
     then
@@ -23,10 +25,77 @@ n_msg_start() {
     echo -n "[$C] $1"
     echo -n "[$C] $1" &>> /var/log/fifo-install.log
 }
+
 n_msg_end() {
     N=""
     echo "$1"
     echo "$1" &>> /var/log/fifo-install.log
+}
+
+
+read_ip() {
+    if [ "x${IP1}x" == "xx" ]
+    then
+	echo $1
+	if [ "x${1}x" != "xx" ]
+	then
+	    read -p "ip($2)> " IP
+	    if [ "x${IP}x" == "xx" ]
+	    then
+		IP=$2
+	    fi
+	else
+	    read -p "ip> " IP
+	fi
+    else
+	IP=$IP1
+	if [ "$IP" == "-d" ]
+	then
+	    IP=$2
+	fi
+	IP1=$IP2
+	IP2=$IP3
+	IP3=$IP4
+	IP4=$IP5
+	IP5=""
+    fi
+    
+    if echo $IP | grep '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > /dev/null
+    then
+	true
+    else
+	echo "Invalid IP address: $IP."
+	read_ip "$1" $2
+    fi
+}
+
+read_value() {
+    if [ "x${IP1}x" == "xx" ]
+    then
+	echo $1
+	if [ "x${1}x" != "xx" ]
+	then
+	    read -p "ip($2)> " IP
+	    if [ "x${IP}x" == "xx" ]
+	    then
+		IP=$2
+	    fi
+	else
+	    read -p "ip> " IP
+	fi
+    else
+	VALUE=$IP1
+	if [ "$IP" == "-d" ]
+	then
+	    IP=$2
+	fi
+	IP1=$IP2
+	IP2=$IP3
+	IP3=$IP4
+	IP4=$IP5
+	IP5=""
+    fi
+    true
 }
 
 
@@ -159,69 +228,6 @@ uninstall() {
     rm -rf /var/log/fifo*
     ps -afe | grep epmd | awk '{print $2}' | xargs kill
 }
-read_ip() {
-    if [ "x${IP1}x" == "xx" ]
-    then
-	if [ "x${1}x" != "xx" ]
-	then
-	    read -p "ip($1)> " IP
-	    if [ "x${IP}x" == "xx" ]
-	    then
-		IP=$1
-	    fi
-	else
-	    read -p "ip> " IP
-	fi
-    else
-	IP=$IP1
-	if [ "$IP" == "-d" ]
-	then
-	    IP=$1
-	fi
-	IP1=$IP2
-	IP2=$IP3
-	IP3=$IP4
-	IP4=$IP5
-	IP5=""
-    fi
-    
-    if echo $IP | grep '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > /dev/null
-    then
-	true
-    else
-	echo "Invalid IP address: $IP."
-	read_ip
-    fi
-}
-
-
-read_value() {
-    if [ "x${IP1}x" == "xx" ]
-    then
-	if [ "x${1}x" != "xx" ]
-	then
-	    read -p "ip($1)> " IP
-	    if [ "x${IP}x" == "xx" ]
-	    then
-		IP=$1
-	    fi
-	else
-	    read -p "ip> " IP
-	fi
-    else
-	VALUE=$IP1
-	if [ "$IP" == "-d" ]
-	then
-	    IP=$1
-	fi
-	IP1=$IP2
-	IP2=$IP3
-	IP3=$IP4
-	IP4=$IP5
-	IP5=""
-    fi
-    true
-}
 
 
 subs() {
@@ -299,14 +305,14 @@ install_service() {
 	download $BASE_PATH/$RELEASE/$COMPONENT.tar.bz2
     fi
     tar jxvf $COMPONENT.tar.bz2 &>> /var/log/fifo-install.log
-    echo "[COMPONENT: $COMPONENT] Cleanup."
+    msg "Cleanup."
     rm $COMPONENT.tar.bz2 &>> /var/log/fifo-install.log
-    echo "[COMPONENT: $COMPONENT] Configuring."
+    msg "Configuring."
     FILE=$COMPONENT/releases/*/vm.args
     subs
     FILE=$COMPONENT/releases/*/sys.config
     subs 
-    echo "[COMPONENT: $COMPONENT] Adding Service."
+    msg "Adding Service."
     svccfg import /fifo/$COMPONENT/epmd.xml &>> /var/log/fifo-install.log || error "Could not activate epmd."
     svccfg import /fifo/$COMPONENT/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate ${COMPONENT}."
     msg "Done."
@@ -318,8 +324,7 @@ install_redis() {
     msg "Installing."
     if [ `zonename` == "global" ]
     then
-	echo "$COMPONENT can not be installed in the global zone!"
-	#	exit 1
+	error "Can not be installed in the global zone!"
     fi
     /opt/local/bin/pkgin update &>> /var/log/fifo-install.log
     /opt/local/bin/pkgin -y install redis &>> /var/log/fifo-install.log
@@ -447,13 +452,11 @@ EOF
 read_component() {
     if [ "x${COMPONENT}x" == "xx" ] 
     then
-	echo
 	read -p "component> " COMPONENT
     fi
     case $COMPONENT in
 	wiggle|sniffle|snarl)
-	    echo "Please enter the IP for your zone."
-	    read_ip
+	    read_ip "Please enter the IP for your zone."
 	    OWN_IP=$IP
 	    REDIS_IP=$IP	    
 	    STATSD_IP=$IP
@@ -463,70 +466,56 @@ read_component() {
 	    install_redis
 	    ;;
 	dnsmasq)
-	    echo "Please enter the IP for your zone."
-	    read_ip
+	    read_ip "Please enter the IP for your zone."
 	    ZONE_IP=$IP
-	    echo "Please enter the DNS for your zone."
-	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
+	    
+	    read_ip "Please enter the DNS for your zone." `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
 
-	    echo "Please enter the Hypervisor IP."
-	    read_ip
+	    read_ip "Please enter the Hypervisor IP."
 	    HYPERVISOR_IP=$IP
 
-	    echo "Please enter the hostname."
-	    read_value
+	    read_value "Please enter the hostname." `hostname`
 	    HOSTNAME=$VALUE
 
 	    install_dnsmasq
 	    ;;
 	all)
 	    HOSTNAME=`hostname`
-	    echo "Please enter the IP for your hypervisor."
-	    read_ip
+	    read_ip "Please enter the IP for your hypervisor."
 	    OWN_IP=$IP
 	    HYPERVISOR_IP=$IP
-	    echo "Please enter the IP for your zone."
-	    read_ip
+	    read_ip "Please enter the IP for your zone."
 	    ZONE_IP=$IP
-	    echo "Please enter the Netmask for your zone."
-	    read_ip `cat /usbkey/config | grep admin_netmask | sed -e 's/admin_netmask=//'`
+	    read_ip "Please enter the Netmask for your zone." `cat /usbkey/config | grep admin_netmask | sed -e 's/admin_netmask=//'`
 	    ZONE_MASK=$IP
-	    echo "Please enter the Gateway for your zone."
-	    read_ip `cat /usbkey/config | grep admin_gateway | sed -e 's/admin_gateway=//'`
+	    read_ip "Please enter the Gateway for your zone." `cat /usbkey/config | grep admin_gateway | sed -e 's/admin_gateway=//'`
 	    ZONE_GW=$IP
-	    echo "Please enter the DNS for your zone."
-	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
+	    read_ip "Please enter the DNS for your zone." `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
 	    install_zone
 	    COMPONENT=chunter
 	    install_chunter 
 	    ;;
 	chunter)
-	    echo "Please enter the IP for your hypervisor."
-	    read_ip
+	    read_ip "Please enter the IP for your hypervisor."
 	    OWN_IP=$IP
-	    echo "Please enter the IP for your zone."
-	    read_ip
+	    read_ip "Please enter the IP for your zone."
 	    ZONE_IP=$IP
 	    install_chunter
 	    ;;
 	graphit)
-	    echo "installing graphite."
 	    install_graphit
 	    ;;
 	zone)
-	    echo "Please enter the IP for your zone."
-	    read_ip
+	    read_ip "Please enter the IP for your zone."
 	    ZONE_IP=$IP
-	    echo "Please enter the Netmask for your zone."
-	    read_ip `cat /usbkey/config | grep admin_netmask | sed -e 's/admin_netmask=//'`
+	    read_ip "Please enter the Netmask for your zone." `cat /usbkey/config | grep admin_netmask | sed -e 's/admin_netmask=//'`
 	    ZONE_MASK=$IP
-	    echo "Please enter the Gateway for your zone."
-	    read_ip `cat /usbkey/config | grep admin_gateway | sed -e 's/admin_gateway=//'`
+	    
+	    read_ip "Please enter the Gateway for your zone." `cat /usbkey/config | grep admin_gateway | sed -e 's/admin_gateway=//'`
 	    ZONE_GW=$IP
-	    echo "Please enter the DNS for your zone."
-	    read_ip `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
+	    read_ip "Please enter the DNS for your zone." `cat /etc/resolv.conf | grep nameserver | head -n1 | awk -e '{ print $2 }'`
 	    ZONE_DNS=$IP
 	    install_zone
 	    ;;
@@ -548,13 +537,12 @@ read_component() {
 	    ;;
 	*)
 	    echo "Component '$COMPONENT' not supported."
-	    echo "Please choose one of: wiggle, sniffle, snarl, redis, chunter, zone or type exit."
+	    echo "Please choose one of: wiggle, sniffle, snarl, redis, chunter, dnsmasq, graphit, zone or type exit."
 	    COMPONENT=""
 	    IP1=""
 	    IP2=""
 	    read_component
 	    ;;
-	
     esac
 }
 
@@ -576,6 +564,9 @@ $0 zone <zone ip> <netmask> <gateway>  - creates the administration zone.
         <dns>
 $0 chunter <hypervisor ip> <zone ip>   - sets up the chunter service.
 $0 redis <hypervisor ip>               - sets up redis in the current zone.
+$0 graphit                             - sets up graphite in the current zone.
+$0 dnsmasq <zone ip> <dns> <hypervisor ip>
+           <hypervisor hostname>       - sets up dnsmasq in the current zone.
 $0 snarl <hypervisor ip>               - sets up snarl in the current zone.
 $0 sniffle <hypervisor ip>             - sets up sniffle in the current zone.
 $0 wiggle <hypervisor ip>              - sets up sniffle in the current zone.
