@@ -30,47 +30,28 @@ n_msg_end() {
 }
 
 
-install_unbound(){
-    C="unbound"
-    cd /fifo/modules
-    msg "Starting unbound installation."
-    msg "Installing ldns"
-    cd ldns-1.6.13
-    ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure ldns"
-    make &>> /var/log/fifo-install.log || error "Failed to compile ldns"
-    make install &>> /var/log/fifo-install.log
-    cd ..
-    
-    msg "Installing unbound"
-    cd unbound-1.4.17
-    ./configure --prefix=/opt/local --disable-gost &>> /var/log/fifo-install.log || error "Failed to configure unbound."
-    make &>> /var/log/fifo-install.log || error "Failed to make unbound."
-    make install &>> /var/log/fifo-install.log || error "Failed to install unbound."
-    cd ..
-    msg "Addung user and goup for unbound."
-    groupadd unbound &>> /var/log/fifo-install.log
-    useradd -g unbound unbound &>> /var/log/fifo-install.log
-    msg "Running initial setup."
-    unbound-control-setup &>> /var/log/fifo-install.log || erro "Setup failed!"
-    msg "Creating config file."
-    cat <<EOF >> /opt/local/etc/unbound/unbound.conf
-server:
-  verbosity: 1
-local-zone: "local." static
-  local-data: "fifo.local. IN A $ZONE_IP"
-  local-data: "$HOSTNAME.local. IN A $HYPERVISOR_IP"
-remote-control:
-  control-enable: yes
-  control-interface: 127.0.0.1
-forward-zone:
-  name: "."
-  forward-addr: $ZONE_DNS
+install_dnsmasq(){
+    C="dnsmasq"
+    msg "Starting dnsmasq installation."
+    pkgin install dnsmasq
+    cat <<EOF > /opt/local/etc/dnsmasq.conf
+domain-needed
+bogus-priv
+strict-order
+expand-hosts
+domain=local
+server=$ZONE_DNS
+
+addn-hosts=/fifo/hosts
+
+# For debugging purposes, log each DNS query as it passes through
+log-queries
 EOF
     
-    cd /fifo
-    curl -sO $BASE_PATH/$RELEASE/unbound.xml
-    svccfg import unbound.xml
-    cd
+    echo <<EOF > /fifo/hosts
+$HYPERVISOR_IP $HOSTNAME.local
+EOF
+    svcadm enable dnsmasq
     echo "nameserver 127.0.0.1" > /etc/resolv.conf
 }
 
@@ -451,7 +432,7 @@ EOF
 
 
     zlogin fifo $0 graphit || error "Graphit installation failed"
-    zlogin fifo $0 unbound $ZONE_IP $ZONE_DNS $HYPERVISOR_IP $HOSTNAME || error "Unbound installation failed"
+    zlogin fifo $0 dnsmasq $ZONE_IP $ZONE_DNS $HYPERVISOR_IP $HOSTNAME || error "DNSMasq installation failed"
 
     zlogin fifo $0 snarl $ZONE_IP || error "Snarl installation failed."
     zlogin fifo $0 sniffle $ZONE_IP || error "Sniffle installation failed."
@@ -476,7 +457,7 @@ read_component() {
 	redis)
 	    install_redis
 	    ;;
-	unbound)
+	dnsmasq)
 	    echo "Please enter the IP for your zone."
 	    read_ip
 	    ZONE_IP=$IP
@@ -492,7 +473,7 @@ read_component() {
 	    read_value
 	    HOSTNAME=$VALUE
 
-	    install_unbound
+	    install_dnsmasq
 	    ;;
 	all)
 	    HOSTNAME=`hostname`
