@@ -264,7 +264,7 @@ install_chunter() {
     then
 	error "Chunter can only be installed in the global zone!"
     fi
-    curl http://$BASE_PATH/$RELEASE/versions &>> /var/log/fifo-install.log
+    curl $BASE_PATH/$RELEASE/versions &>> /var/log/fifo-install.log
     mkdir -p /var/log/fifo/$COMPONENT &>> /var/log/fifo-install.log
     mkdir -p /opt &>> /var/log/fifo-install.log
     cd /opt &>> /var/log/fifo-install.log
