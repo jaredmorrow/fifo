@@ -139,15 +139,15 @@ download() {
 
 install_py_pkg() {
     msg "Installing: $1"
-    cd $1
+    cd $1 &>> /var/log/fifo-install.log
     /opt/local/bin/python2.7 setup.py install  &>> /var/log/fifo-install.log || error "Failed to install $1"
-    cd ..
+    cd .. &>> /var/log/fifo-install.log
 }
 
 install_graphit() {
     C="GRAPHIT"
     msg "Starting installation"
-    cd /fifo/modules
+    cd /fifo/modules  &>> /var/log/fifo-install.log
     msg "Updating packages"
     /opt/local/bin/pkgin update &>> /var/log/fifo-install.log
     msg "Installing required packages (this will take a while!)"
@@ -163,11 +163,11 @@ install_graphit() {
     /opt/local/bin/npm install statsd &>> /var/log/fifo-install.log || error "Failed to install npm package statsd."
     
     msg "Installing: py2cairo"
-    cd py2cairo-1.10.0
+    cd py2cairo-1.10.0  &>> /var/log/fifo-install.log
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf configure --prefix=/opt/local  &>> /var/log/fifo-install.log || error "Could not configure py2cairo."
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf build  &>> /var/log/fifo-install.log || error "Could not build py2cairo."
     CC=/opt/local/bin/gcc CFLAGS=-m64 LDFLAGS=-m64 /opt/local/bin/python2.7 waf install  &>> /var/log/fifo-install.log || error "Could not install py2cairo."
-    cd ..
+    cd ..  &>> /var/log/fifo-install.log
 
     install_py_pkg whisper-0.9.10
     install_py_pkg django-tagging-0.3.1
@@ -177,7 +177,7 @@ install_graphit() {
     mkdir -p /opt/graphite/storage/log/carbon-cache
 
     msg "Configuring: carbon"
-    cd /opt/graphite/conf
+    cd /opt/graphite/conf  &>> /var/log/fifo-install.log
     cp carbon.conf.example carbon.conf
     cp storage-schemas.conf.example storage-schemas.conf
     cat <<EOF >>storage-schemas.conf
@@ -186,9 +186,9 @@ priority = 110
 pattern = ^stats\..*
 retentions = 1:1h,10:2160,60:10080,600:262974
 EOF
-    cd -
+    cd -  &>> /var/log/fifo-install.log
     msg "Configuring: web frontend"
-    cd /opt/graphite/webapp/graphite
+    cd /opt/graphite/webapp/graphite  &>> /var/log/fifo-install.log
     cp local_settings.py.example local_settings.py
     cp /opt/graphite/conf/graphite.wsgi.example /opt/graphite/conf/graphite.wsgi
     sed -e 's/Listen 0.0.0.0:80/Listen 0.0.0.0:8080/' -ibak /opt/local/etc/httpd/httpd.conf
@@ -199,11 +199,11 @@ EOF
     /opt/local/bin/python2.7 manage.py syncdb --noinput  &>> /var/log/fifo-install.log
     /opt/local/bin/python2.7 manage.py createsuperuser --username=admin --email=admin@localhost.local --noinput  &>> /var/log/fifo-install.log
     echo 'UPDATE auth_user SET password="sha1$4557a$674798faef13ba7192efad47fb9fc7021fbcf919" WHERE username="admin";' | sqlite3 /opt/graphite/storage/graphite.db  &>> /var/log/fifo-install.log
-    cd -
+    cd -  &>> /var/log/fifo-install.log
 
     /opt/local/bin/chown -R www:www /opt/graphite/
 
-    cd /fifo
+    cd /fifo  &>> /var/log/fifo-install.log
     msg "Downloading service descriptors"
     curl -sO $BASE_PATH/$RELEASE/statsdconfig.js
     curl -sO $BASE_PATH/$RELEASE/statsd.xml
@@ -212,7 +212,7 @@ EOF
     svcadm enable apache &>> /var/log/fifo-install.log 
     svccfg import statsd.xml &>> /var/log/fifo-install.log
     svccfg import carbon.xml &>> /var/log/fifo-install.log
-    cd -
+    cd -  &>> /var/log/fifo-install.log
     msg "done"
 }
 
@@ -274,13 +274,13 @@ install_chunter() {
     svccfg import /opt/custom/smf/epmd.xml &>> /var/log/fifo-install.log || error "Could not activate epmd."
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate chunter."
-    cd -
+    cd -  &>> /var/log/fifo-install.log
     msg "Adding fifo DNS server."
 
     echo "nameserver $ZONE_IP" > /tmp/resolv.conf    
     grep -v  "nameserver $ZONE_IP" /etc/resolv.conf  >> /tmp/resolv.conf 
     cp /tmp/resolv.conf /etc/resolv.conf
-    msg "Restarting NSCD."
+    msg "Restarting NSCD." 
     /etc/init.d/nscd stop
     /etc/init.d/nscd start
     msg "Done."
@@ -316,7 +316,7 @@ install_service() {
     svccfg import /fifo/$COMPONENT/epmd.xml &>> /var/log/fifo-install.log || error "Could not activate epmd."
     svccfg import /fifo/$COMPONENT/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate ${COMPONENT}."
     msg "Done."
-    cd -
+    cd -  &>> /var/log/fifo-install.log
 }
 
 install_redis() {
@@ -351,10 +351,10 @@ install_zone() {
 	    PWD=`pwd`
 	    mkdir -p /var/db/imgadm
 	    cp /var/db/dsadm/* /var/db/imgadm/
-	    cd /var/db/imgadm
+	    cd /var/db/imgadm   &>> /var/log/fifo-install.log
 	    mv dscache.json imgcache.json
 	    for manifest in *.dsmanifest; do mv $manifest ${manifest/dsmanifest/json}; done;
-	    cd $PWD
+	    cd $PWD  &>> /var/log/fifo-install.log
 	fi
     fi
     msg "Starting Zone installation."
@@ -403,7 +403,7 @@ EOF
     msg "Prefetching services."
     mkdir -p /zones/fifo/root/fifo
     PWD=`pwd`
-    cd /zones/fifo/root/fifo
+    cd /zones/fifo/root/fifo  &>> /var/log/fifo-install.log
     if [ -f $PWD/snarl.tar.bz2 ]
     then
 	msg "snarl tarbal found skipping download."
@@ -438,7 +438,7 @@ EOF
 	download $BASE_PATH/$RELEASE/modules.tar.bz2
     fi
     tar jxf modules.tar.bz2
-    cd -
+    cd -   &>> /var/log/fifo-install.log
 
 
     zlogin fifo $0 graphit || error "Graphit installation failed"
@@ -526,10 +526,10 @@ read_component() {
 	collect)
 	    (
 		mkdir -p /tmp/fifo
-		cd /tmp/fifo
+		cd /tmp/fifo   &>> /var/log/fifo-install.log
 		cp -r /var/log/fifo/chunter /zones/fifo/root/var/log/fifo/* /var/log/fifo-install.log /zones/fifo/root/var/log/fifo-install.log .
 		ps -afe | grep [r]un_erl > ps.log
-		cd /tmp
+		cd /tmp  &>> /var/log/fifo-install.log
 		gtar cjvf fifo-debug.tar.bz2 fifo
 		rm -rf /tmp/fifo
 	    )
