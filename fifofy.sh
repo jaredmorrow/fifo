@@ -118,7 +118,7 @@ addn-hosts=/fifo/hosts
 log-queries
 EOF
     
-    echo <<EOF > /fifo/hosts
+    cat <<EOF > /fifo/hosts
 $HYPERVISOR_IP $HOSTNAME.local
 EOF
     msg "Enabeling dnsmasq."
