@@ -267,11 +267,17 @@ install_chunter() {
     subs
     FILE=$COMPONENT/releases/*/sys.config
     subs
-    msg "Adding Service."
     mkdir -p /opt/custom/smf/
 
-    cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
-    svccfg import /opt/custom/smf/epmd.xml &>> /var/log/fifo-install.log || error "Could not activate epmd."
+    if  svcs -H epmd &> /dev/null
+    then
+	msg "EPMD already registered."
+    else
+	msg "Installing EPMD service."
+	cp /opt/$COMPONENT/epmd.xml /opt/custom/smf/
+	svccfg import /opt/custom/smf/epmd.xml &>> /var/log/fifo-install.log || error "Could not activate epmd."
+    fi 
+    msg "Adding Service."
     cp /opt/$COMPONENT/$COMPONENT.xml /opt/custom/smf/
     svccfg import /opt/custom/smf/$COMPONENT.xml &>> /var/log/fifo-install.log || error "Could not activate chunter."
     cd -  &>> /var/log/fifo-install.log
