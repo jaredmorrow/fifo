@@ -1,4 +1,4 @@
-REL=0.2.0
+REL=0.2.2
 CHUNTER_VER=$(shell cd chunter; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
 SNIFFLE_VER=$(shell cd sniffle; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
 SNARL_VER=$(shell cd snarl; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
@@ -45,20 +45,7 @@ copy: versions
 	rm $(REL_DIR)/$(REL)/fifofy.sh.sed
 
 update:
-	git fetch --tags
-	git checkout master
-	git pull
-	git checkout 0.2.0
-	git pull
 	git submodule init
-	cd chunter; git checkout master; git fetch --tags
-	cd sniffle; git checkout master; git fetch --tags
-	cd snarl; git checkout master; git fetch --tags
-	cd wiggle; git checkout master; git fetch --tags
-	cd chunter; git checkout 0.2.0; git pull
-	cd sniffle; git checkout 0.2.0; git pull
-	cd snarl; git checkout 0.2.0; git pull
-	cd wiggle; git checkout 0.3.0; git pull
 	git submodule update
 clean:
 	rm -r chunter erllibcloudapi libsnarl libsniffle snarl sniffle wiggle
