@@ -48,17 +48,17 @@ update:
 	git fetch --tags
 	git checkout master
 	git pull
-	git checkout release/0.2.0
+	git checkout 0.2.0
 	git pull
 	git submodule init
 	cd chunter; git checkout master; git fetch --tags
 	cd sniffle; git checkout master; git fetch --tags
 	cd snarl; git checkout master; git fetch --tags
 	cd wiggle; git checkout master; git fetch --tags
-	cd chunter; git checkout release/0.2.0; git pull
-	cd sniffle; git checkout release/0.2.0; git pull
-	cd snarl; git checkout release/0.2.0; git pull
-	cd wiggle; git checkout release/0.3.0; git pull
+	cd chunter; git checkout 0.2.0; git pull
+	cd sniffle; git checkout 0.2.0; git pull
+	cd snarl; git checkout 0.2.0; git pull
+	cd wiggle; git checkout 0.3.0; git pull
 	git submodule update
 clean:
 	rm -r chunter erllibcloudapi libsnarl libsniffle snarl sniffle wiggle
