@@ -1,4 +1,4 @@
-REL=0.2.0pre
+REL=0.2.0
 CHUNTER_VER=$(shell cd chunter; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
 SNIFFLE_VER=$(shell cd sniffle; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
 SNARL_VER=$(shell cd snarl; git log --pretty=format:'%d' --abbrev-commit --date=short -1 | sed -e's; .HEAD, \([^,]*\),.*;\1;')
