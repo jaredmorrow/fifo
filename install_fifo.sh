@@ -13,8 +13,7 @@ USER_SCRIPT="/opt/local/gnu/bin/echo 'http://release.project-fifo.net/pkg/${BRAN
 /opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/erl_fun.json;\
 /opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/syscalls.json;\
 /opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_read.json;\
-/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_write.json
-"
+/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_write.json"
 
 echo "================================================================================"
 echo "Welcome to the Project FiFo express setup, this script will guide you through a "
