@@ -38,9 +38,12 @@ echo "==========================================================================
 
 echo
 echo "FiFo zone network setup"
-read FIFO_IP   "IP:      "
-read FIFO_MASK "Netmask: "
-read FIFO_GW   "Gateway: "
+echo -n  "IP:      "
+read FIFO_IP
+echo -n  "Netmask: "
+read FIFO_MASK
+echo -n "Gateway: "
+read FIFO_GW
 echo
 echo "Branch selection:"
 echo " 1) development branch - this branch keeps track of the newest features it"
@@ -52,7 +55,8 @@ echo "    it is released, it only merges the changes from dev every so often in"
 echo "    the form of a propperly numbered release. While there is no fixed"
 echo "    release cycle new releases happen around every one to two month."
 
-read FIFO_BRANCH "Release[1,2]: "
+echo -n "Release[1,2]: "
+read FIFO_BRANCH
 case $FIFO_BRANCH in
   "1")
     BRANCH=dev
