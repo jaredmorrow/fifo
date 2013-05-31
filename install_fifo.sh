@@ -59,6 +59,7 @@ esac
 
 USER_SCRIPT="/opt/local/gnu/bin/echo 'http://release.project-fifo.net/pkg/${BRANCH}/' >> /opt/local/etc/pkgin/repositories.conf;\
 export PATH=/opt/local/gnu/bin:/opt/local/bin:/opt/local/sbin:/usr/bin:/usr/sbin;\
+export HOME=/root;\
 /opt/local/bin/pkgin -fy up;\
 /opt/local/bin/pkgin -y install snarl sniffle howl wiggle jingles;\
 /opt/local/gnu/bin/cp /opt/local/jingles/config/nginx.conf /opt/local/etc/nginx/nginx.conf;\
