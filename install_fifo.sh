@@ -95,6 +95,9 @@ cat <<EOF | vmadm create
   }],
   "customer_metadata": {
     "user-script":"${USER_SCRIPT}"
+  },
+  "metadata": {
+    "user-script":"${USER_SCRIPT}"
   }
 }
 EOF
