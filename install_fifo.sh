@@ -109,6 +109,7 @@ while ! /opt/local/snarl/bin/snarl ping>/dev/null; do echo -n .; done;\
 
 
 echo "Installing chunter service."
+cd /opt
 curl -O http://release.project-fifo.net/chunter/${BRANCH}/chunter-latest.gz > /dev/null
 gunzip chunter-latest.gz
 sh chunter-latest
