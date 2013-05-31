@@ -111,3 +111,17 @@ curl -O http://release.project-fifo.net/chunter/${BRANCH}/chunter-latest.gz
 gunzip chunter-latest.gz
 sh chunter-latest
 cd $PWD
+echo "================================================================================"
+echo "The installation and initalisation might take a while, after that you can access"
+echo "your installation at:
+echo
+echo "URL: https://${FIFO_IP}"
+echo
+echo "With the credentials:"
+echo " User:     admin"
+echo " Password: admin"
+echo
+echo "Enjoy,"
+echo "the Project-FiFo team."
+echo "================================================================================"
+
