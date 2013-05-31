@@ -101,7 +101,7 @@ while ! /opt/local/sniffle/bin/sniffle ping>/dev/null; do echo -n .; done;\
 while ! /opt/local/snarl/bin/snarl ping>/dev/null; do echo -n .; done;\
 > /tmp/stage_13;\
 /usr/sbin/svcadm enable nginx;\
-/opt/local/gnu/bin/sleep 1;\
+/opt/local/gnu/bin/sleep 10;\
 > /tmp/stage_14;\
 /opt/local/sbin/fifoadm users add admin;\
 > /tmp/stage_15;\
