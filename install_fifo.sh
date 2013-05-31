@@ -217,9 +217,7 @@ echo
 echo
 echo
 line
-echo "================================================================================"
-echo "The installation and initalisation might take a while, after that you can access"
-echo "your installation at:
+echo "You should now be able to access your installation at:"
 echo
 echo "URL: https://${FIFO_IP}"
 echo
@@ -229,5 +227,4 @@ echo " Password: admin"
 echo
 echo "Enjoy,"
 echo "the Project-FiFo team."
-echo "================================================================================"
-
+line
