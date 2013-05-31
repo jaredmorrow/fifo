@@ -87,6 +87,7 @@ cat <<EOF | vmadm create
     "8.8.8.8",
     "8.8.4.4"
   ],
+  "mdata_exec_timeout":0,
   "nics": [{
     "interface": "net0",
     "nic_tag": "admin",
