@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
 BRANCH=rel
 PWD=`pwd`
-USER_SCRIPT="/opt/local/gnu/bin/echo 'http://release.project-fifo.net/pkg/${BRANCH}/' >> /opt/local/etc/pkgin/repositories.conf;\
-/opt/local/bin/pkgin -fy up;\
-/opt/local/bin/pkgin -y install snarl sniffle howl wiggle jingles;\
-/opt/local/gnu/bin/cp /opt/local/jingles/config/nginx.conf /opt/local/etc/nginx/nginx.conf;\
-/usr/sbin/svcadm enable epmd snarl sniffle howl wiggle nginx;\
-/opt/local/gnu/bin/sleep 10;\
-/opt/local/sbin/fifoadm users add admin;\
-/opt/local/sbin/fifoadm users grant admin ...;\
-/opt/local/sbin/fifoadm users passwd admin admin;\
-/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/erl_fun.json;\
-/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/syscalls.json;\
-/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_read.json;\
-/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_write.json"
+
 
 echo "================================================================================"
 echo "Welcome to the Project FiFo express setup, this script will guide you through a "
@@ -69,6 +57,19 @@ case $FIFO_BRANCH in
   ;;
 esac
 
+USER_SCRIPT="/opt/local/gnu/bin/echo 'http://release.project-fifo.net/pkg/${BRANCH}/' >> /opt/local/etc/pkgin/repositories.conf;\
+/opt/local/bin/pkgin -fy up;\
+/opt/local/bin/pkgin -y install snarl sniffle howl wiggle jingles;\
+/opt/local/gnu/bin/cp /opt/local/jingles/config/nginx.conf /opt/local/etc/nginx/nginx.conf;\
+/usr/sbin/svcadm enable epmd snarl sniffle howl wiggle nginx;\
+/opt/local/gnu/bin/sleep 10;\
+/opt/local/sbin/fifoadm users add admin;\
+/opt/local/sbin/fifoadm users grant admin ...;\
+/opt/local/sbin/fifoadm users passwd admin admin;\
+/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/erl_fun.json;\
+/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/syscalls.json;\
+/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_read.json;\
+/opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_write.json"
 
 imgadm update
 imgadm import fdea06b0-3f24-11e2-ac50-0b645575ce9d
