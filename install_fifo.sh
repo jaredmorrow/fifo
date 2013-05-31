@@ -93,7 +93,7 @@ cat <<EOF | vmadm create
     "netmask": "${FIFO_MASK}",
     "gateway": "${FIFO_GW}"
   }],
-  "metadata": {
+  "customer_metadata": {
     "user-script":"${USER_SCRIPT}"
   }
 }
