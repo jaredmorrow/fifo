@@ -2,8 +2,20 @@
 BRANCH=rel
 PWD=`pwd`
 
+function line() {
+  echo "================================================================================"
+}
+function section() {
+  echo
+  echo
+  echo
+  echo
+  line
+  echo "          $1"
+  line
+}
 
-echo "================================================================================"
+line
 echo "Welcome to the Project FiFo express setup, this script will guide you through a "
 echo "the process of setting up a first installation of Project FiFo."
 echo "The script takes the following assumptions which should be true for your setup"
@@ -21,18 +33,17 @@ echo " * a oficially tested version of SmartOS (chunter will complain if it is n
 echo " * no zones with non uuid zone names (aliases are OK)"
 echo
 echo "Before we begin the installation we need some information:"
-echo "================================================================================"
 
-echo
-echo "FiFo zone network setup"
+
+section "Network Setup"
 echo -n  "IP:      "
 read FIFO_IP
 echo -n  "Netmask: "
 read FIFO_MASK
 echo -n "Gateway: "
 read FIFO_GW
-echo
-echo "Branch selection:"
+
+section "Branch Selection"
 echo " rel) release branch - this branch undergoos a more careful testing before"
 echo "      it is released, it only merges the changes from dev every so often in"
 echo "      the form of a propperly numbered release. While there is no fixed"
@@ -41,7 +52,7 @@ echo " dev) development branch - this branch keeps track of the newest features 
 echo "      receives basic testing but there might be breaking changes intricuded."
 echo "      In exchange all new features and advanced fixes land here within a"
 echo "      matter of hours."
-
+echo
 echo -n "Release[dev,rel]: "
 read FIFO_BRANCH
 case $FIFO_BRANCH in
@@ -107,22 +118,18 @@ while ! /opt/local/snarl/bin/snarl ping>/dev/null; do echo -n .; done;\
 /opt/local/sbin/fifoadm dtrace import /opt/local/sniffle/share/dtrace/zfs_write.json;\
 > /tmp/stage_21"
 
-
-echo "Installing chunter service."
+section  "Chunter Installation"
 cd /opt
 curl -O http://release.project-fifo.net/chunter/${BRANCH}/chunter-latest.gz > /dev/null
 gunzip chunter-latest.gz
 sh chunter-latest
 cd $PWD
 
-echo "The remaining process is automated."
-echo
-echo "Installing the dataset."
+section  "Dataset Installation"
 imgadm update
 imgadm import fdea06b0-3f24-11e2-ac50-0b645575ce9d
 
-echo
-echo "Preparing the zone."
+section  "Zone Creation"
 cat <<EOF | vmadm create
 {
   "autoboot": true,
@@ -176,7 +183,7 @@ function wait_for_file () {
 
 }
 
-echo "Finalizing zone setup."
+section  "Zone Setup / FiFo Installion"
 
 echo -n [> 00% -
 wait_for_file stage_1 05
@@ -202,7 +209,14 @@ wait_for_file stage_20 98
 wait_for_file stage_21 100
 echo -en '\b'
 echo 'done.'
-
+echo
+echo
+echo
+echo
+echo
+echo
+echo
+line
 echo "================================================================================"
 echo "The installation and initalisation might take a while, after that you can access"
 echo "your installation at:
