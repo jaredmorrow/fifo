@@ -225,6 +225,10 @@ echo "With the credentials:"
 echo " User:     admin"
 echo " Password: admin"
 echo
+echo "Don't be surprised if you see a warning about missing hypervisors"
+echo "the autoconfiguration algorithm used can take up to two mintes"
+echo "for the first round of discovery."
+echo
 echo "Enjoy,"
 echo "the Project-FiFo team."
 line
