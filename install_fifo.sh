@@ -35,7 +35,7 @@ echo
 echo "Before we begin the installation we need some information:"
 
 
-section "Network Setup"
+section "Network Setup for the FiFo zone."
 echo -n  "IP:      "
 read FIFO_IP
 echo -n  "Netmask: "
