@@ -3,16 +3,16 @@ BRANCH=rel
 PWD=`pwd`
 
 function line() {
-  echo "================================================================================"
+    echo "================================================================================"
 }
 function section() {
-  echo
-  echo
-  echo
-  echo
-  line
-  echo "          $1"
-  line
+    echo
+    echo
+    echo
+    echo
+    line
+    echo "          $1"
+    line
 }
 
 line
@@ -56,16 +56,16 @@ echo
 echo -n "Release[dev,rel]: "
 read FIFO_BRANCH
 case $FIFO_BRANCH in
-  "dev")
-    BRANCH=dev
-    ;;
-  "rel")
-    BRANCH=rel
-    ;;
-  *)
-    echo "$FIFO_BRANCH is not a valid branch selection!"
-    exit 1
-  ;;
+    "dev")
+        BRANCH=dev
+        ;;
+    "rel")
+        BRANCH=rel
+        ;;
+    *)
+        echo "$FIFO_BRANCH is not a valid branch selection!"
+        exit 1
+        ;;
 esac
 
 USER_SCRIPT="/opt/local/gnu/bin/echo 'http://release.project-fifo.net/pkg/${BRANCH}/' >> /opt/local/etc/pkgin/repositories.conf;\
@@ -174,12 +174,12 @@ function percent_bar() {
 }
 
 function wait_for_file () {
-  while [ ! -f /zones/$UUID/root/tmp/$1 ]
-  do
-    percent_bar
-  done
-  echo -ne '\b\b\b\b\b\b\b=> '
-  echo -n ${2}% -
+    while [ ! -f /zones/$UUID/root/tmp/$1 ]
+    do
+        percent_bar
+    done
+    echo -ne '\b\b\b\b\b\b\b=> '
+    echo -n ${2}% -
 
 }
 
