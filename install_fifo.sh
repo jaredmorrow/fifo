@@ -185,7 +185,7 @@ function wait_for_file () {
 
 section  "Zone Setup / FiFo Installion"
 
-echo -n [> 00% -
+echo -n '[> 00% -'
 wait_for_file stage_1 05
 wait_for_file stage_2 10
 wait_for_file stage_3 15
