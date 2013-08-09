@@ -160,7 +160,7 @@ cat <<EOF | vmadm create
 }
 EOF
 
-UUID=`vmadm list -p -o uuid`
+UUID=`vmadm list -p -o uuid alias=fifo`
 
 function percent_bar() {
     sleep 1
