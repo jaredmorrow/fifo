@@ -216,6 +216,7 @@ echo
 echo
 echo
 echo
+vmadm update $UUID remove_customer_metadata=user-script
 line
 echo "You should now be able to access your installation at:"
 echo
