@@ -29,13 +29,14 @@ echo " * Your are not using special network setups (ethersubs, bounded network e
 echo
 echo "Highly recommanded:"
 echo " * a DHCP free setup."
-echo " * a oficially tested version of SmartOS (chunter will complain if it is not)"
+echo " * an officially tested version of SmartOS (chunter will complain if it is not)"
 echo " * no zones with non uuid zone names (aliases are OK)"
 echo
 echo "Before we begin the installation we need some information:"
 
 
 section "Network Setup for the FiFo zone."
+echo "All values must be in dotted decimal format (ex: 192.168.1.1)"
 echo -n  "IP:      "
 read FIFO_IP
 echo -n  "Netmask: "
